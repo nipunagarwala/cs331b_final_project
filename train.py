@@ -1,17 +1,14 @@
-
-
-
-class Config(object):
-
-	def __init__(self):
-		pass
-
+import numpy as np
+import sys
+import os
+from layers import SmallLayers
+from models import VLadder
 
 
 
 class Trainer(object):
 
-	def __init__(self):
+	def __init__(self, curModel):
 		pass
 
 
