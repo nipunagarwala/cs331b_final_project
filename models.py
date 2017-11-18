@@ -43,6 +43,7 @@ class VLadder(object):
 			self.regularization += self.ladder_reg['z1']
 
 		for i in range(2, self.config.num_layers+1):
+
 			if i == 2:
 				cur_hidden_func = self.layers.hidden_d1
 				cur_ladder_func = self.layers.ladder_z2
@@ -57,7 +58,7 @@ class VLadder(object):
 				exit(1)
 
 			self.hidden_layers['d'+str(i-1)] = cur_hidden_func()
-			self.mean['z'+str(i)], self.std_dev['z'+str(i)] = cur_ladder_func(self.hidden_layers['d'+str(i-1)])
+			self.mean['z'+str(i)], self.std_dev['z'+str(i)] = cur_ladder_func(self.hidden_layers['d'+str(i-1)], self.config)
 
 			normal_dist_var = Variable(torch.randn(self.config.batch_size, self.config.ladder_dim['z'+str(i)]), requires_grad=False)
 			self.ladder_sample['z'+str(i)] = self.mean['z'+str(i)] + torch.mul(self.std_dev['z'+str(i)],normal_dist_var)
@@ -100,12 +101,12 @@ class VLadder(object):
 
 			if i < self.config.num_layers:
 				self.train_latent_st['zhat'+str(i)] = cur_gen_func(self.train_latent_st['zhat'+str(i+1)],
-													self.ladder_sample['z'+str(i)], is_training=self.config.is_training)
+													self.ladder_sample['z'+str(i)], self.config)
 				self.gen_latent_st['zhat'+str(i)] = cur_gen_func(self.gen_latent_st['zhat'+str(i+1)], 
-													self.ladder_gen_in['z'+str(i)], is_training=False)
+													self.ladder_gen_in['z'+str(i)], self.config)
 			else:
-				self.train_latent_st['zhat'+str(i)] = cur_gen_func(None,self.ladder_sample['z'+str(i)], is_training=self.config.is_training)
-				self.gen_latent_st['zhat'+str(i)] = cur_gen_func(None, self.ladder_gen_in['z'+str(i)], is_training=False)
+				self.train_latent_st['zhat'+str(i)] = cur_gen_func(None, self.ladder_sample['z'+str(i)], self.config)
+				self.gen_latent_st['zhat'+str(i)] = cur_gen_func(None, self.ladder_gen_in['z'+str(i)], self.config)
 
 		self.train_out = self.train_latent_st['zhat1']
 		self.gen_out = self.gen_latent_st['zhat1']

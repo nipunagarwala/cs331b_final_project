@@ -2,152 +2,149 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 
+# # To be understood more
 
-#def lrelu(x, rate=0.1):
-	#does this need to be a torch fn or np is fine
-	#return np.maximum(np.minimum(x * rate, 0), x)
-	#return nn.BatchNorm2d()
+# def compute_kernel():
+# 	pass
 
-def conv2d_bn_relu(num_inputs, num_outputs, kernel_size, stride, is_training=True):
-	#num_inputs = channels in input image
-	#num_outputs = channels produced by conv
-	weight = kernal_size
-
-	conv = nn.Conv2d(num_inputs, num_outputs, kernel_size, stride=1, padding=0, dilation=1,groups=1) 
-	bn = F.BatchNorm2d(num_outputs)
-	lrelu = F.LeakyReLU(0.2)
-	
-	conv = lrelu(bn(conv))
-
-	return conv
-
-def conv2d_trans_bn_relu():
-	conv
-	batch_norm
-	lrelu
-	pass
-
-
-def conv2d_trans_bn():
-	
-	pass
-
-def conv2d_bn_lrelu():
-	#input: minibatch x in_channels x iH x iW
-	#weight: out_channels x in_channels/groups x kH x kW =? kernel_size
-	#pyTorch doesn't have number of out filters?
-	"""weight = kernal_size
-	
-	conv = F.conv2d(inputs, weight, stride) 
-	conv = F.BatchNorm2d(kernel_size)
-	conv = F.LeakyReLU(0.2, is_training=is_training)"""
-	return conv
-
-def conv2d_trans_bn_lrelu():
-
-	pass
-
-
-def fc_bn_relu(num_inputs, num_outputs):
-	fc = nn.Linear(num_inputs, num_outputs) #input feature size, output feature size
-	fc.weight = nn.init.normal(fc.weight, mean=0, std=0.02)
-
-	#not sure how to regularize the 
-	#weights_regularizer=tf.contrib.layers.l2_regularizer(2.5e-5), activation_fn = tf.identity)
-
-	bn = nn.BatchNorm2d(num_outputs) #size of input layer
-	fc = bn(fc)
-	fc = nn.ReLU(fc)
-	return fc
-
-
-def fc_bn_lrelu(num_inputs, num_outputs):
-	fc = nn.Linear(num_inputs, num_outputs) #input feature size, output feature size
-	fc.weight = nn.init.normal(fc.weight, mean=0, std=0.02)
-
-	#not sure how to regularize the 
-	#weights_regularizer=tf.contrib.layers.l2_regularizer(2.5e-5), activation_fn = tf.identity)
-
-	bn = nn.BatchNorm2d(num_outputs) #size of input layer
-	fc = bn(fc)
-	fc = nn.LeakyReLU(fc)
-	return fc
-
-
-
-# To be understood more
-
-def compute_kernel():
-	pass
-
-def compute_mmd():
-	pass
+# def compute_mmd():
+# 	pass
 
 
 #object...
-class SmallLayers(nn.Module):
+class HiddenLayerConv(nn.Module):
 
-	def __init__(self, network):
-		#super(Net, self).__init__()
-		self.network = network
-		#not sure
-		self.relu = nn.ReLU()
-		self.lrelu = nn.LeakyReLU(0.1)
-		self.conv1 = nn.Conv2d(input_x, self.network.cs[1], 4, 2)
+	def __init__(self, config, layer_name):
+		self.conv1 = nn.Conv2d(config.num_inputs, config.num_outputs, config.kernel_size, stride=config.stride, 
+ 							padding=config.padding, dilation=config.dilation, groups=config.groups) 
+		self.bn1 = nn.BatchNorm2d(config.num_outputs, affine=True)
+		self.relu1 = nn.ReLU(inplace=False)
 
-		conv = F.conv2d(inputs, weight, stride) 
+		self.conv2 = nn.Conv2d(config.num_inputs, config.num_outputs, config.kernel_size, stride=config.stride, 
+ 							padding=config.padding, dilation=config.dilation, groups=config.groups) 
+		self.bn2 = nn.BatchNorm2d(config.num_outputs, affine=True)
+		self.relu2 = nn.ReLU(inplace=False)
 
-		self.fc1 = nn.Linear(conv2.get_shape(), self.network.cs[3])
-		nninit.constant(self.fc1.bias, 0.1)
-		nninit.sigmoid(self.fc1.bias, )
-
-		pass
-
-	def hidden_d1(self, input_x, is_training=True):
-		#MNIST; self.cs = [1, 64, 128, 1024]
-		conv1 = conv2d_bn_lrelu(input_x, self.network.cs[1], [4,4], 2, is_training)
-		conv2 = conv2d_bn_lrelu(conv1, self.network.cs[2], [4,4], 2, is_training)
-		#conv2 = reshape(conv2, [-1, np.prod(conv2.get_shape().as_list()[1:])])
-		#reshpe in PYTORCH
-		conv2 = conv2.view(-1, np.prod(conv2.get_shape().as_list()[1:]))
-		#fc1 = fc(conv2., self.network.cs[3], activation_fn = tf.identity)
-		return fc1
-
-	def ladder_z1(self, input_x, is_training=True):
-		conv1 = conv2d_bn_lrelu(input_x, self.network.cs[1], [4,4], 2, is_training)
-		conv2 = conv2d_bn_lrelu(conv1, self.netork.cs[2], [4,4], 2, is_training)
-		conv2 = conv2.view(-1, np.prod(conv2.get_shape().as_list()[1:]))
-		fc1_mean = fc(conv2, self.network.cs[3], activation_fn=tf.identity)
-		fc1_stddev = tf.contrib.layers.fully_connected(conv2, self.network.ladder0_dim, activation_fn=tf.sigmoid)
-		return fc1_mean, fc1_stddev\
+		self.name = layer_name
 
 
+	def forward(self, x):
 
-	def hidden_d2():
-		pass
+		self.layer1_out = self.relu1(self.bn1(self.conv1(x)))
+		self.layer2_out = self.relu2(self.bn2(self.conv2(self.layer1_out)))
 
-	def ladder_z2():
-		pass
+		output = conv2.view(-1, np.prod(self.layer2_out.get_shape().as_list()[1:]))
 
-	def hidden_d3():
-		pass
-
-	def ladder_z3():
-		pass
+		return output
 
 
-	def generative_z2():
-		pass
+class HiddenLayerFC(nn.Module):
 
-	def generative_z1():
-		pass
+	def __init__(self, config, layer_name):
+		self.fc1 = nn.Linear(config.num_inputs, config.num_outputs, bias=False)
+		self.bn1 = nn.BatchNorm1d(num_features=config.num_outputs, affine=True)
+		self.relu1 = nn.ReLU(inplace=False)
 
-	def generative_x():
-		pass
+		self.fc1 = nn.Linear(config.num_inputs, config.num_outputs, bias=False)
+		self.bn1 = nn.BatchNorm1d(num_features=config.num_outputs, affine=True)
+		self.relu1 = nn.ReLU(inplace=False)
 
-	# To be understood
-	def combine_noise():
-		pass
+		self.fc3 = nn.Linear(config.num_inputs, config.num_outputs, bias=False)
+
+		self.name = layer_name
+
+
+	def forward(self, x):
+
+		self.layer1_out = self.relu1(self.bn1(self.fc1(x)))
+		self.layer2_out = self.relu2(self.bn2(self.fc2(self.layer1_out)))
+
+		output = self.fc3(self.layer2_out)
+
+		return output
+
+
+class LadderLayerConv(nn.Module):
+
+	def __init__(self, config, layer_name):
+		self.conv1 = nn.Conv2d(config.num_inputs, config.num_outputs, config.kernel_size, stride=config.stride, 
+ 							padding=config.padding, dilation=config.dilation, groups=config.groups) 
+		self.bn1 = nn.BatchNorm2d(config.num_outputs, affine=True)
+		self.relu1 = nn.ReLU(inplace=False)
+
+		self.conv2 = nn.Conv2d(config.num_inputs, config.num_outputs, config.kernel_size, stride=config.stride, 
+ 							padding=config.padding, dilation=config.dilation, groups=config.groups) 
+		self.bn2 = nn.BatchNorm2d(config.num_outputs, affine=True)
+		self.relu2 = nn.ReLU(inplace=False)
+
+		self.fc_mean = nn.Linear(config.num_inputs, config.num_outputs)
+		self.fc_stddev = nn.Linear(config.num_inputs, config.num_outputs)
+		self.sigmoid = nn.Sigmoid()
+
+		self.name = layer_name
+
+
+	def forward(self,x):
+		self.layer1_out = self.relu1(self.bn1(self.conv1(x)))
+		self.layer2_out = self.relu2(self.bn2(self.conv2(self.layer1_out)))
+
+		features = conv2.view(-1, np.prod(self.layer2_out.get_shape().as_list()[1:]))
+		self.mean = self.fc_mean(features)
+		self.std_dev = self.fc_stddev(features)
+		self.std_dev = self.sigmoid(self.std_dev)
+
+		return self.mean, self.std_dev
+
+
+class LadderLayerFC(nn.Module):
+
+	def __init__(self, config, layer_name):
+		self.conv1 = nn.Conv2d(config.num_inputs, config.num_outputs, config.kernel_size, stride=config.stride, 
+ 							padding=config.padding, dilation=config.dilation, groups=config.groups) 
+		self.bn1 = nn.BatchNorm2d(config.num_outputs, affine=True)
+		self.relu1 = nn.ReLU(inplace=False)
+
+		self.conv2 = nn.Conv2d(config.num_inputs, config.num_outputs, config.kernel_size, stride=config.stride, 
+ 							padding=config.padding, dilation=config.dilation, groups=config.groups) 
+		self.bn2 = nn.BatchNorm2d(config.num_outputs, affine=True)
+		self.relu2 = nn.ReLU(inplace=False)
+
+		self.fc_mean = nn.Linear(config.num_inputs, config.num_outputs)
+		self.fc_stddev = nn.Linear(config.num_inputs, config.num_outputs)
+		self.sigmoid = nn.Sigmoid()
+
+		self.name = layer_name
+
+
+	def forward(self,x):
+		self.layer1_out = self.relu1(self.bn1(self.conv1(x)))
+		self.layer2_out = self.relu2(self.bn2(self.conv2(self.layer1_out)))
+
+		features = conv2.view(-1, np.prod(self.layer2_out.get_shape().as_list()[1:]))
+		self.mean = self.fc_mean(features)
+		self.std_dev = self.fc_stddev(features)
+		self.std_dev = self.sigmoid(self.std_dev)
+
+		return self.mean, self.std_dev
+
+
+class GenerativeLayer(nn.Module):
+
+	def __init__(self, config, layer_name):
+		
+
+
+	def forward(self,x):
+		
+
+
+
+class CombineNoise(nn.Module):
+
+	def __init__(self, config, layer_name):
+
+
+	def forward(self, x)
 
 
 
