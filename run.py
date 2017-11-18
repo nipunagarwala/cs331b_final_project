@@ -13,9 +13,10 @@ class Config(object):
 		self.reg_type = 
 		self.num_layers = 
 		self.dataset_path = 
-		self.ladder_z1_dim = 
-		self.ladder_z2_dim = 
-		self.ladder_z3_dim = 
+		self.ladder_dim = {}
+		self.ladder_dim['z1'] = 
+		self.ladder_dim['z2'] = 
+		self.ladder_dim['z3'] = 
 		self.batch_size = 
 		self.latent_noise = 
 		self.dilation = 
