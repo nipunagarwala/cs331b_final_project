@@ -3,27 +3,6 @@ import numpy as np
 import os
 import sys
 
-class Config(object):
-
-	def __init__(self, config):
-		self.input_shape = 
-		self.target_shape = 
-		self.is_training = 
-		self.reg_val = 
-		self.reg_type = 
-		self.num_layers = 
-		self.dataset_path = 
-		self.ladder_dim = {}
-		self.ladder_dim['z1'] = 
-		self.ladder_dim['z2'] = 
-		self.ladder_dim['z3'] = 
-		self.batch_size = 
-		self.latent_noise = 
-		self.dilation = 
-		self.stride = 
-		self.reshape = True
-
-
 
 def train_model(args):
 	cur_config = Config()

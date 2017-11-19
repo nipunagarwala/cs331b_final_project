@@ -1,9 +1,11 @@
 import numpy as np
 import sys
 import os
-from layers import SmallLayers
 import torch
 from torch.autograd import Variable
+import torch.nn as nn
+import torch.nn.functional as F
+from layers import *
 
 
 
@@ -132,6 +134,40 @@ class VLadder(object):
 	# To be understood
 	def generate_manifold_samples_op():
 		pass
+
+
+
+class VLadder(nn.Module):
+
+	def __init__(self, config):
+		self.hidden_d1 = HiddenLayerConv(config.hidden1.conv1, config.hidden1.conv2,
+								 config.hidden1.linear, "hidden_layer_1")
+		self.hidden_d2 = HiddenLayerFC(config.hidden2.linear1, config.hidden2.linear2,
+											 config.hidden2.linear3, "hidden_layer_2")
+		self.hidden_d3 = HiddenLayerFC(config.hidden3.linear1, config.hidden3.linear2, 
+									config.hidden3.linear3, "hidden_layer_3")
+
+		self.latent_z1 = LadderLayerConv(config.ladder1.conv1, config.ladder1.conv2,
+											 config.ladder1.linear, "ladder_layer_1")
+		self.latent_z2 = LadderLayerFC(config.ladder2.linear1, config.ladder2.linear2, 
+											config.ladder2.linear3, "ladder_layer_2")
+		self.latent_z3 = LadderLayerFC(config.ladder3.linear1, config.ladder3.linear2,
+										 config.ladder3.linear3, "ladder_layer_3")
+
+		self.generative_g3 = GenerativeLayerFC(config.generative3.linear1,
+								 config.generative3.linear2, config.generative3.linear3, "generative_layer_3")
+		self.generative_g2 = GenerativeLayerFC(config.generative2.linear1,
+								 config.generative2.linear2, config.generative2.linear3, "generative_layer_2")
+		self.generative_g1 = GenerativeLayerConv(config.generative1.conv1,
+								 config.generative1.conv2, config.generative1.linear, "generative_layer_1")
+
+
+
+	def forward(self, x):
+
+
+
+
 
 
 

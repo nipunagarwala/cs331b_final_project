@@ -106,7 +106,7 @@ class HiddenLayerConv(nn.Module):
 		self.output = self.conv2(self.conv1(x))
 
 		self.features = self.output.view(-1, np.prod(np.asarray(self.output.size())[1:]))
-		self.fc3 = nn.Linear(np.prod(np.asarray(self.output.size())[1:]), self.config_3.num_outputs, bias=False)
+		self.fc3 = nn.Linear(np.prod(np.asarray(self.output.size())[1:]), self.config_3.num_outputs, bias=self.config_3.bias)
 
 		self.output = self.fc3(self.features)
 
