@@ -97,18 +97,30 @@ class HiddenLayerConv(nn.Module):
 	def __init__(self, config_1, config_2, config_3, layer_name):
 		self.conv1 = Conv2D_BN_ReLU(config_1)
 		self.conv2 = Conv2D_BN_ReLU(config_2)
-		self.name = layer_name
-		self.config_3 = config_3
 
+		n_size = self._get_conv_output(config_1.shape)
+		self.fc =  nn.Linear(n_size, self.config_3.num_outputs, bias=self.config_3.bias)
+		self.name = layer_name
+		
+
+
+	def _get_conv_output(self, shape):
+        bs = 1
+        input_dat = Variable(torch.rand(bs, *shape))
+        output_feat = self._forward_features(input_dat)
+        n_size = output_feat.data.view(bs, -1).size(1)
+        return n_size
+
+    def _forward_features(self, x):
+        x = self.conv2(self.conv1(x))
+        return x
 
 	def forward(self, x):
 
 		self.output = self.conv2(self.conv1(x))
 
-		self.features = self.output.view(-1, np.prod(np.asarray(self.output.size())[1:]))
-		self.fc3 = nn.Linear(np.prod(np.asarray(self.output.size())[1:]), self.config_3.num_outputs, bias=self.config_3.bias)
-
-		self.output = self.fc3(self.features)
+		self.features = self.output.view(self.output.size(0), -1)
+		self.output = self.fc(self.features)
 
 		return self.output
 
@@ -162,20 +174,33 @@ class LadderLayerConv(nn.Module):
 		self.conv1 = Conv2D_BN_ReLU(config_1)
 		self.conv2 = Conv2D_BN_ReLU(config_2)
 
+		n_size = self._get_conv_output(config_1.shape)
+
+		self.fc_mean = nn.Linear(n_size, self.config_3.mean_length)
+		self.fc_stddev = nn.Linear(n_size, self.config_3.stddev_length)
+
 		self.sigmoid = nn.Sigmoid()
-		self.config_3 = config_3
 
 		self.name = layer_name
+
+
+	def _get_conv_output(self, shape):
+        bs = 1
+        input_dat = Variable(torch.rand(bs, *shape))
+        output_feat = self._forward_features(input_dat)
+        n_size = output_feat.data.view(bs, -1).size(1)
+        return n_size
+
+    def _forward_features(self, x):
+        x = self.conv2(self.conv1(x))
+        return x
 
 
 	def forward(self,x):
 		
 		features = self.conv2(self.conv1(x))
 
-		self.fc_mean = nn.Linear(np.prod(np.asarray(features.size())[1:]), self.config_3.mean_length)
-		self.fc_stddev = nn.Linear(np.prod(np.asarray(features.size())[1:]), self.config_3.stddev_length)
-
-		flattened_features = features.view(-1, np.prod(np.asarray(features.size())[1:]))
+		flattened_features = features.view(features.size(0), -1)
 		self.mean = self.fc_mean(flattened_features)
 		self.std_dev = self.fc_stddev(flattened_features)
 		self.std_dev = self.sigmoid(self.std_dev)

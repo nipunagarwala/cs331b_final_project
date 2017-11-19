@@ -155,15 +155,32 @@ class VLadder(nn.Module):
 										 config.ladder3.linear3, "ladder_layer_3")
 
 		self.generative_g3 = GenerativeLayerFC(config.generative3.linear1,
-								 config.generative3.linear2, config.generative3.linear3, "generative_layer_3")
+								 config.generative3.linear2, config.generative3.linear3,
+								  "generative_layer_3")
 		self.generative_g2 = GenerativeLayerFC(config.generative2.linear1,
-								 config.generative2.linear2, config.generative2.linear3, "generative_layer_2")
+								 config.generative2.linear2, config.generative2.linear3,
+								  "generative_layer_2")
 		self.generative_g1 = GenerativeLayerConv(config.generative1.conv1,
-								 config.generative1.conv2, config.generative1.linear, "generative_layer_1")
+								 config.generative1.conv2, config.generative1.linear, 
+								 "generative_layer_1")
 
+		self.output = {}
+		self.config = config
 
 
 	def forward(self, x):
+		self.output['d1'] = self.hidden_d1(x)
+		self.output['z1_mu'], self.output['z1_sigma'] = self.latent_z1(x)
+
+		self.output['d2'] = self.hidden_d2(self.output['d1'])
+		self.output['z2_mu'], self.output['z2_sigma'] = self.latent_z2(self.output['d1'])
+
+		self.output['d3'] = self.hidden_d2(self.output['d2'])
+		self.output['z3_mu'], self.output['z3_sigma'] = self.latent_z2(self.output['d2'])
+
+
+
+	def loss_op(self):
 
 
 

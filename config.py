@@ -14,6 +14,7 @@ class ConfigHidden1(object):
 	class Conv1(object):
 
 		def __init__(self):
+			self.shape = (3,40,40)
 			self.num_inputs = 3
 			self.num_outputs = 64
 			self.kernel_size = [4,4]
