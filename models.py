@@ -178,9 +178,13 @@ class VLadder(nn.Module):
 		self.output['d3'] = self.hidden_d2(self.output['d2'])
 		self.output['z3_mu'], self.output['z3_sigma'] = self.latent_z2(self.output['d2'])
 
+		
+
+		return self.output
 
 
-	def loss_op(self):
+
+	def loss_function(self, output_dict):
 
 
 

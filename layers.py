@@ -275,7 +275,7 @@ class GenerativeLayerConv(nn.Module):
 		self.flat_vec = self.fc1(cur_state)
 		self.feature_map = self.flat_vec.view(list(self.flat_vec.size())[0], self.config_3.dim1, self.config_3.dim2, self.config_3.dim3)
 
-		self.output = self.deconv2(self.deconv(self.feature_map))
+		self.output = self.deconv2(self.deconv1(self.feature_map))
 
 		return self.output
 
