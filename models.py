@@ -91,7 +91,7 @@ class VLadder(nn.Module):
 
 
 
-	def loss_function(self):
+	def regularization_function(self):
 
 		if self.config.reg_type == 'kl':
 
