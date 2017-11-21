@@ -3,6 +3,10 @@ import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
 
+
+#####################################################
+#####################################################
+# TODO
 # # To be understood more
 
 # def compute_kernel():
@@ -11,6 +15,8 @@ import numpy as np
 # def compute_mmd():
 # 	pass
 
+#####################################################
+#####################################################
 
 ''' Class : Conv2D_BN_ReLU
 	Usage : Container class to make using Convolution, BatchNorm and ReLU together easier
