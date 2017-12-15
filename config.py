@@ -20,6 +20,7 @@ class ConfigVLAE(object):
 		self.ladder2_dim = self.ladder2.linear3.mean_length
 		self.ladder3_dim = self.ladder3.linear3.mean_length
 		self.batch_size = 32
+		self.reg_type = 'kl'
 
 
 #####################################################
@@ -262,10 +263,10 @@ class ConfigGenerative1(object):
 	class Conv1(object):
 
 		def __init__(self):
-			self.num_inputs = 3
-			self.num_outputs = 64
+			self.num_inputs = 64
+			self.num_outputs = 1
 			self.kernel_size = (3,3)
-			self.stride = 2
+			self.stride = (2,2)
 			self.padding = (1,1)
 			self.dilation = 1 
 			self.groups = 1
@@ -276,29 +277,29 @@ class ConfigGenerative1(object):
 	class Conv2(object):
 
 		def __init__(self):
-			self.num_inputs = 64
-			self.num_outputs = 128
+			self.num_inputs = 128
+			self.num_outputs = 64
 			self.kernel_size = (3,3)
-			self.stride = 2
+			self.stride = (2,2)
 			self.padding = (1,1)
 			self.dilation = 1
 			self.groups = 1
 			self.output_padding = (1,1)
-			self.dim1 = 28/4
+			self.dim1 = 128
 			self.dim2 = 28/4
 			self.dim3 = 28/4
 
 	class LinearInit(object):
 
 		def __init__(self):
-			self.num_inputs = 64
+			self.num_inputs = 2
 			self.num_outputs = 64
 
 	class Linear(object):
 
 		def __init__(self):
 			self.num_inputs = 64
-			self.num_outputs = 64
+			self.num_outputs = 6272
 
 
 

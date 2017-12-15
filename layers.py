@@ -55,7 +55,8 @@ class Conv2DTrans_BN_ReLU(nn.Module):
 	def __init__(self, config):
 		super(Conv2DTrans_BN_ReLU, self).__init__()
 		self.conv_trans = nn.ConvTranspose2d(config.num_inputs, config.num_outputs, config.kernel_size, stride=config.stride, 
-							padding=config.padding, dilation=config.dilation, groups=config.groups) 
+							padding=config.padding, output_padding=config.output_padding, dilation=config.dilation,
+							groups=config.groups) 
 		self.bn = nn.BatchNorm2d(config.num_outputs, affine=True)
 		self.relu = nn.ReLU(inplace=False)
 
@@ -128,7 +129,7 @@ class HiddenLayerConv(nn.Module):
 	def forward(self, x):
 
 		output = self.conv2(self.conv1(x))
-
+		self.output_feat = output
 		features = output.view(output.size(0), -1)
 		output = self.fc(features)
 
@@ -266,10 +267,11 @@ class GenerativeLayerConv(nn.Module):
 		self.fc1 = FC_BN_ReLU(config_1)
 		self.deconv1 = Conv2DTrans_BN_ReLU(config_2)
 		self.deconv2 = nn.ConvTranspose2d(config_3.num_inputs, config_3.num_outputs, config_3.kernel_size, stride=config_3.stride, 
-							padding=config_3.padding, dilation=config_3.dilation, groups=config_3.groups) 
+							padding=config_3.padding, dilation=config_3.dilation, output_padding=config_3.output_padding,
+							groups=config_3.groups) 
 		self.comb_noise = CombineNoise('gated_add', 32, 64, 'Combine_Noise_1')
 
-		self.config_3 = config_3
+		self.config_2 = config_2
 		self.name = layer_name
 
 
@@ -278,7 +280,7 @@ class GenerativeLayerConv(nn.Module):
 		if ladder_in is not None:
 			cur_state = self.fc_init(ladder_in)
 			if latent_in is not None:
-				cur_state = self.comb_noise(latent_in, ladder_in)
+				cur_state = self.comb_noise(latent_in, cur_state)
 			else:
 				cur_state = ladder_in
 
@@ -287,9 +289,10 @@ class GenerativeLayerConv(nn.Module):
 			exit(1)
 
 		flat_vec = self.fc1(cur_state)
-		feature_map = self.flat_vec.view(list(flat_vec.size())[0], self.config_3.dim1, self.config_3.dim2, self.config_3.dim3)
-
-		output = self.deconv2(self.deconv1(feature_map))
+		feature_map = flat_vec.view(list(flat_vec.size())[0], self.config_2.dim1, self.config_2.dim2, self.config_2.dim3)
+		output = self.deconv1(feature_map)
+		output = self.deconv2(output)
+		# output = self.deconv2(self.deconv1(feature_map))
 
 		return output
 
@@ -311,9 +314,8 @@ class GenerativeLayerLadderFC(nn.Module):
 		cur_state = latent_in
 		if ladder_in is not None:
 			cur_state = self.fc_init(ladder_in)
-			print cur_state.size()
 			if latent_in is not None:
-				cur_state = self.comb_noise(latent_in, ladder_in)
+				cur_state = self.comb_noise(latent_in, cur_state)
 			else:
 				cur_state = ladder_in
 
@@ -321,12 +323,10 @@ class GenerativeLayerLadderFC(nn.Module):
 			print("Generative layer must be given an input")
 			exit(1)
 
-		print cur_state.size()
 		cur_state = self.fc1(cur_state)
 		cur_state = self.fc2(cur_state)
 		cur_state = self.fc3(cur_state)
 		output = cur_state
-		print("Completed")
 
 		return output
 

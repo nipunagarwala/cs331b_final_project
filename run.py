@@ -12,6 +12,7 @@ dtype = torch.cuda.FloatTensor
 torch.cuda.manual_seed(1)
 kwargs = {'num_workers': 1, 'pin_memory': True}
 
+
 def run_test_epoch(epoch, model, optimizer, test_loader):
 	model.eval()
 	test_loss = 0
@@ -21,12 +22,12 @@ def run_test_epoch(epoch, model, optimizer, test_loader):
 		data = data.cuda()
 		output_dict = model(data)
 		loss = model.loss_function(output_dict, data).data[0]
-		# if i == 0:
-		# 	n = min(data.size(0), 8)
-		# 	comparison = torch.cat([data[:n],
-		# 					recon_batch.view(args.batch_size, 1, 28, 28)[:n]])
-		# 	save_image(comparison.data.cpu(),
-		# 				'/diskhdd/cs333/results_' + str(epoch) + '.png', nrow=n)
+		if i == 0:
+			n = min(data.size(0), 8)
+			comparison = torch.cat([data[:n],
+							output_dict['out'].view(args.batch_size, 1, 28, 28)[:n]])
+			save_image(comparison.data.cpu(),
+						'/diskhdd/cs331b/results_' + str(epoch) + '.png', nrow=n)
 
 	test_loss /= len(test_loader.dataset)
 	print('====> Test set loss: {:.4f}'.format(test_loss))
@@ -50,12 +51,11 @@ def run_train_epoch(epoch, model, optimizer, train_loader, args, batch_size):
 		loss.backward(retain_graph=True)
 		train_loss += loss.data[0]
 		optimizer.step()
-		# if batch_idx % args.log_interval == 0:
-		# if batch_idx  == 0:
-		print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
-			epoch, batch_idx * len(data), len(train_loader.dataset),
-			100. * batch_idx / len(train_loader),
-			loss.data[0] / len(data)))
+		if batch_idx % 32*10 == 0:
+			print('Train Epoch: {} [{}/{} ({:.0f}%)]\tLoss: {:.6f}'.format(
+				epoch, batch_idx * len(data), len(train_loader.dataset),
+				100. * batch_idx / len(train_loader),
+				loss.data[0] / len(data)))
 
 	print('====> Epoch: {} Average loss: {:.4f}'.format(
 		  epoch, train_loss / len(train_loader.dataset)))

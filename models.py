@@ -37,6 +37,7 @@ class VLadder(nn.Module):
 		self.generative_g1 = GenerativeLayerConv(config.generative1.linear,
 								config.generative1.conv2,config.generative1.conv1, 
 								 "generative_layer_1", config.generative1.linear_init)
+		self.read_out = nn.Sigmoid()
 
 		self.config = config
 		self.args = args
@@ -85,7 +86,7 @@ class VLadder(nn.Module):
 			output['train3'] =  self.generative_g3(sample['z3'])
 			output['train2'] = self.generative_g2(output['train3'], sample['z2'])
 			output['train1'] = self.generative_g1(output['train2'], sample['z1'])
-			output['out'] = output['train1']
+			output['out'] = self.read_out(output['train1'])
 
 		elif self.args.phase == 'generate':
 
@@ -96,7 +97,7 @@ class VLadder(nn.Module):
 			output['gen3'] = self.generative_g3(normal_dist_var3)
 			output['gen2'] = self.generative_g2(output['gen3'], normal_dist_var2)
 			output['gen1'] = self.generative_g1(output['gen2'], normal_dist_var1)
-			output['out'] = output['gen1']
+			output['out'] = self.read_out(output['gen1'])
 
 		else:
 			print("Option has either not been implemented or is incorrect ......") 
@@ -107,17 +108,17 @@ class VLadder(nn.Module):
 
 
 
-	def loss_function(self, output):
+	def loss_function(self, output, target_y):
 		reg = {}
 		regularization = 0
 		if self.config.reg_type == 'kl':
 
-				reg['z1'] = 0.5*torch.sum(torch.exp(output['z1_mu']) + \
-									 torch.mul(output['z1_mu'],output['z1_mu']) - 1 - output['z1_sigma'])
-				reg['z2'] = 0.5*torch.sum(torch.exp(output['z2_mu']) + \
-									 torch.mul(output['z2_mu'],output['z2_mu']) - 1 - output['z2_sigma'])
-				reg['z3'] = 0.5*torch.sum(torch.exp(output['z3_mu']) + \
-									 torch.mul(output['z3_mu'],output['z3_mu']) - 1 - output['z3_sigma'])
+				reg['z1'] = -0.5*torch.sum(1 +  output['z1_sigma'] - output['z1_mu'].pow(2) - \
+									       output['z1_sigma'].exp())
+				reg['z2'] =  -0.5*torch.sum(1 +  output['z2_sigma'] - output['z2_mu'].pow(2) - \
+									       output['z2_sigma'].exp())
+				reg['z3'] =  -0.5*torch.sum(1 +  output['z3_sigma'] - output['z3_mu'].pow(2) - \
+									       output['z3_sigma'].exp())
 
 		elif self.config.reg_type == 'mmd':
 			reg['z1'] = 0
@@ -129,7 +130,8 @@ class VLadder(nn.Module):
 			exit(1)
 
 		regularization += reg['z1'] + reg['z2'] + reg['z3']
-		loss = F.binary_cross_entropy(output['out'], target_y, size_average=True).cuda()
+
+		loss = F.binary_cross_entropy(output['out'].cuda(), target_y.cuda(), size_average=True).cuda()
 
 		return regularization
 
