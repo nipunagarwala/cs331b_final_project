@@ -2,6 +2,7 @@ import torch
 import torch.nn as nn
 import torch.nn.functional as F
 import numpy as np
+from torch.autograd import Variable
 
 
 #####################################################
@@ -28,8 +29,9 @@ import numpy as np
 class Conv2D_BN_ReLU(nn.Module):
 
 	def __init__(self, config):
+		super(Conv2D_BN_ReLU, self).__init__()
 		self.conv = nn.Conv2d(config.num_inputs, config.num_outputs, config.kernel_size, stride=config.stride, 
- 							padding=config.padding, dilation=config.dilation, groups=config.groups) 
+							padding=config.padding, dilation=config.dilation, groups=config.groups) 
 		self.bn = nn.BatchNorm2d(config.num_outputs, affine=True)
 		self.relu = nn.ReLU(inplace=False)
 
@@ -51,8 +53,9 @@ class Conv2D_BN_ReLU(nn.Module):
 class Conv2DTrans_BN_ReLU(nn.Module):
 
 	def __init__(self, config):
+		super(Conv2DTrans_BN_ReLU, self).__init__()
 		self.conv_trans = nn.ConvTranspose2d(config.num_inputs, config.num_outputs, config.kernel_size, stride=config.stride, 
- 							padding=config.padding, dilation=config.dilation, groups=config.groups) 
+							padding=config.padding, dilation=config.dilation, groups=config.groups) 
 		self.bn = nn.BatchNorm2d(config.num_outputs, affine=True)
 		self.relu = nn.ReLU(inplace=False)
 
@@ -74,7 +77,7 @@ class Conv2DTrans_BN_ReLU(nn.Module):
 class FC_BN_ReLU(nn.Module):
 
 	def __init__(self, config):
-
+		super(FC_BN_ReLU, self).__init__()
 		self.fc = nn.Linear(config.num_inputs, config.num_outputs, bias=False)
 		self.bn = nn.BatchNorm1d(num_features=config.num_outputs, affine=True)
 		self.relu = nn.ReLU(inplace=False)
@@ -101,32 +104,35 @@ class FC_BN_ReLU(nn.Module):
 class HiddenLayerConv(nn.Module):
 
 	def __init__(self, config_1, config_2, config_3, layer_name):
+		super(HiddenLayerConv, self).__init__()
 		self.conv1 = Conv2D_BN_ReLU(config_1)
 		self.conv2 = Conv2D_BN_ReLU(config_2)
 
 		n_size = self._get_conv_output(config_1.shape)
-		self.fc =  nn.Linear(n_size, self.config_3.num_outputs, bias=self.config_3.bias)
+		self.fc =  nn.Linear(n_size, config_3.num_outputs, bias=config_3.bias)
 		self.name = layer_name
 		
 
 
 	def _get_conv_output(self, shape):
-        bs = 1
-        input_dat = Variable(torch.rand(bs, *shape))
-        output_feat = self._forward_features(input_dat)
-        n_size = output_feat.data.view(bs, -1).size(1)
-        return n_size
+		bs = 1
+		print shape
+		input_dat = Variable(torch.rand(bs, *shape))
+		print input_dat.size()
+		output_feat = self._forward_features(input_dat)
+		n_size = output_feat.data.view(bs, -1).size(1)
+		return n_size
 
-    def _forward_features(self, x):
-        x = self.conv2(self.conv1(x))
-        return x
+	def _forward_features(self, x):
+		x = self.conv2(self.conv1(x))
+		return x
 
 	def forward(self, x):
 
-		self.output = self.conv2(self.conv1(x))
+		output = self.conv2(self.conv1(x))
 
-		self.features = self.output.view(self.output.size(0), -1)
-		self.output = self.fc(self.features)
+		features = output.view(output.size(0), -1)
+		output = self.fc(features)
 
 		return self.output
 
@@ -147,6 +153,7 @@ class HiddenLayerConv(nn.Module):
 class HiddenLayerFC(nn.Module):
 
 	def __init__(self, config_1, config_2, config_3, layer_name):
+		super(HiddenLayerFC, self).__init__()
 		self.fc1 = FC_BN_ReLU(config_1)
 		self.fc2 = FC_BN_ReLU(config_2)
 		self.fc3 = nn.Linear(config_2.num_outputs, config_3.num_outputs, bias=False)
@@ -156,9 +163,9 @@ class HiddenLayerFC(nn.Module):
 
 	def forward(self, x):
 
-		self.output = self.fc3(self.fc2(self.fc1(x)))
+		output = self.fc3(self.fc2(self.fc1(x)))
 
-		return self.output
+		return output
 
 
 ''' Class : LadderLayerConv
@@ -177,13 +184,14 @@ class HiddenLayerFC(nn.Module):
 class LadderLayerConv(nn.Module):
 
 	def __init__(self, config_1, config_2, config_3, layer_name):
+		super(LadderLayerConv, self).__init__()
 		self.conv1 = Conv2D_BN_ReLU(config_1)
 		self.conv2 = Conv2D_BN_ReLU(config_2)
 
 		n_size = self._get_conv_output(config_1.shape)
 
-		self.fc_mean = nn.Linear(n_size, self.config_3.mean_length)
-		self.fc_stddev = nn.Linear(n_size, self.config_3.stddev_length)
+		self.fc_mean = nn.Linear(n_size, config_3.mean_length)
+		self.fc_stddev = nn.Linear(n_size, config_3.stddev_length)
 
 		self.sigmoid = nn.Sigmoid()
 
@@ -191,15 +199,15 @@ class LadderLayerConv(nn.Module):
 
 
 	def _get_conv_output(self, shape):
-        bs = 1
-        input_dat = Variable(torch.rand(bs, *shape))
-        output_feat = self._forward_features(input_dat)
-        n_size = output_feat.data.view(bs, -1).size(1)
-        return n_size
+		bs = 1
+		input_dat = Variable(torch.rand(bs, *shape))
+		output_feat = self._forward_features(input_dat)
+		n_size = output_feat.data.view(bs, -1).size(1)
+		return n_size
 
-    def _forward_features(self, x):
-        x = self.conv2(self.conv1(x))
-        return x
+	def _forward_features(self, x):
+		x = self.conv2(self.conv1(x))
+		return x
 
 
 	def forward(self,x):
@@ -207,11 +215,11 @@ class LadderLayerConv(nn.Module):
 		features = self.conv2(self.conv1(x))
 
 		flattened_features = features.view(features.size(0), -1)
-		self.mean = self.fc_mean(flattened_features)
-		self.std_dev = self.fc_stddev(flattened_features)
-		self.std_dev = self.sigmoid(self.std_dev)
+		mean = self.fc_mean(flattened_features)
+		std_dev = self.fc_stddev(flattened_features)
+		std_dev = self.sigmoid(std_dev)
 
-		return self.mean, self.std_dev
+		return mean, std_dev
 
 
 
@@ -231,6 +239,7 @@ class LadderLayerConv(nn.Module):
 class LadderLayerFC(nn.Module):
 
 	def __init__(self, config_1, config_2, config_3, layer_name):
+		super(LadderLayerFC, self).__init__()
 		self.fc1 = FC_BN_ReLU(config_1)
 		self.fc2 = FC_BN_ReLU(config_2)
 
@@ -242,24 +251,25 @@ class LadderLayerFC(nn.Module):
 
 
 	def forward(self,x):
-		self.features =self.fc2(self.fc1(x))
+		features =self.fc2(self.fc1(x))
 
-		self.mean = self.fc_mean(self.features)
-		self.std_dev = self.fc_stddev(self.features)
-		self.std_dev = self.sigmoid(self.std_dev)
+		mean = self.fc_mean(features)
+		std_dev = self.fc_stddev(features)
+		std_dev = self.sigmoid(std_dev)
 
-		return self.mean, self.std_dev
+		return mean, std_dev
 
 
 class GenerativeLayerConv(nn.Module):
 
-	def __init__(self, config_1, config_2, config_3, config_4, config_noise, layer_name):
-		self.fc_init = FC_BN_ReLU(config_1)
-		self.fc1 = FC_BN_ReLU(config_2)
-		self.deconv1 = Conv2DTrans_BN_ReLU(config_3)
-		self.deconv2 = nn.ConvTranspose2d(config_4.num_inputs, config_4.num_outputs, config_4.kernel_size, stride=config_4.stride, 
- 							padding=config_4.padding, dilation=config_4.dilation, groups=config_4.groups) 
-		self.comb_noise = CombineNoise(config_noise)
+	def __init__(self, config_1, config_2, config_3, layer_name, config_init, config_noise=None):
+		super(GenerativeLayerConv, self).__init__()
+		self.fc_init = FC_BN_ReLU(config_init)
+		self.fc1 = FC_BN_ReLU(config_1)
+		self.deconv1 = Conv2DTrans_BN_ReLU(config_2)
+		self.deconv2 = nn.ConvTranspose2d(config_3.num_inputs, config_3.num_outputs, config_3.kernel_size, stride=config_3.stride, 
+							padding=config_3.padding, dilation=config_3.dilation, groups=config_3.groups) 
+		# self.comb_noise = CombineNoise(config_noise)
 
 		self.config_3 = config_3
 		self.name = layer_name
@@ -278,23 +288,23 @@ class GenerativeLayerConv(nn.Module):
 			print("Generative layer must be given an input")
 			exit(1)
 
-		self.flat_vec = self.fc1(cur_state)
-		self.feature_map = self.flat_vec.view(list(self.flat_vec.size())[0], self.config_3.dim1, self.config_3.dim2, self.config_3.dim3)
+		flat_vec = self.fc1(cur_state)
+		feature_map = self.flat_vec.view(list(flat_vec.size())[0], self.config_3.dim1, self.config_3.dim2, self.config_3.dim3)
 
-		self.output = self.deconv2(self.deconv1(self.feature_map))
+		output = self.deconv2(self.deconv1(feature_map))
 
-		return self.output
+		return output
 
 
 class GenerativeLayerLadderFC(nn.Module):
 
 	def __init__(self, config_1, config_2, config_3, config_4, config_noise, layer_name):
-
+		super(GenerativeLayerLadderFC, self).__init__()
 		self.fc_init = FC_BN_ReLU(config_1)
 		self.fc1 = FC_BN_ReLU(config_2)
 		self.fc2 = FC_BN_ReLU(config_3)
 		self.fc3 = nn.Linear(config_3.num_outputs, config_4.num_outputs, bias=False)
-		self.comb_noise = CombineNoise(config_noise)
+		# self.comb_noise = CombineNoise(config_noise)
 
 		self.name = layer_name
 
@@ -312,13 +322,14 @@ class GenerativeLayerLadderFC(nn.Module):
 			print("Generative layer must be given an input")
 			exit(1)
 
-		self.output = self.fc3(self.fc2(self.fc1(cur_state)))
+		output = self.fc3(self.fc2(self.fc1(cur_state)))
 
-		return self.output
+		return output
 
 class GenerativeLayerSimpleFC(nn.Module):
 
 	def __init__(self, config_1, config_2, config_3, layer_name):
+		super(GenerativeLayerSimpleFC, self).__init__()
 		self.fc1 = FC_BN_ReLU(config_1)
 		self.fc2 = FC_BN_ReLU(config_2)
 		self.fc3 = nn.Linear(config_2.num_outputs, config_3.num_outputs, bias=False)
@@ -327,32 +338,32 @@ class GenerativeLayerSimpleFC(nn.Module):
 
 
 	def forward(self,x):
-		self.output = self.fc3(self.fc2(self.fc1(x)))
+		output = self.fc3(self.fc2(self.fc1(x)))
 
-		return self.output
+		return output
 		
 
 
-class CombineNoise(nn.Module):
+# class CombineNoise(nn.Module):
 
-	def __init__(self, config, layer_name):
-		self.config = config
-		self.layer_name = layer_name
+# 	def __init__(self, config, layer_name):
+# 		self.config = config
+# 		self.layer_name = layer_name
 
 
-	def forward(self, latent_in, ladder_in, gate=None):
-		if self.config.name == 'concat':
-			return torch.cat((latent_in, ladder_in), len(list(ladder_in.size()))-1 )
+# 	def forward(self, latent_in, ladder_in, gate=None):
+# 		if self.config.name == 'concat':
+# 			return torch.cat((latent_in, ladder_in), len(list(ladder_in.size()))-1 )
 
-		else:
+# 		else:
 
-			if self.config.name == 'add':
-				return latent_in + ladder_in
-			elif self.config.name == 'gated_add':
-				return latent_in + gate*ladder_in
-			else:
-				print("Wrong method name used for CombineNoise Class")
-				exit(1)
+# 			if self.config.name == 'add':
+# 				return latent_in + ladder_in
+# 			elif self.config.name == 'gated_add':
+# 				return latent_in + gate*ladder_in
+# 			else:
+# 				print("Wrong method name used for CombineNoise Class")
+# 				exit(1)
 
 
 

@@ -4,42 +4,59 @@ import numpy as np
 
 
 
+class ConfigVLAE(object):
+
+	def __init__(self):
+		self.hidden1 = ConfigHidden1()
+		self.hidden2 = ConfigHidden2()
+		self.hidden3 = ConfigHidden3()
+		self.ladder1 = ConfigLadder1()
+		self.ladder2 = ConfigLadder2()
+		self.ladder3 = ConfigLadder3()
+		self.generative1 = ConfigGenerative1()
+		self.generative2 = ConfigGenerative2()
+		self.generative3 = ConfigGenerative3()
+
+
 #####################################################
 #####################################################
 class ConfigHidden1(object):
 
 	def __init__(self):
-		pass
+		self.conv1 = self.Conv1()
+		self.conv2 = self.Conv2()
+		self.linear = self.Linear()
 
 	class Conv1(object):
 
 		def __init__(self):
-			self.shape = (3,40,40)
-			self.num_inputs = 3
+			self.shape = (1,28,28)
+			self.num_inputs = 1
 			self.num_outputs = 64
-			self.kernel_size = [4,4]
+			self.kernel_size = (3,3)
 			self.stride = 2
-			self.padding = 
+			self.padding = (1,1)
 			self.dilation = 1
-			self.groups = 
+			self.groups = 1
 
 
 
 	class Conv2(object):
 
 		def __init__(self):
+			self.shape = (1,28,28)
 			self.num_inputs = 64
 			self.num_outputs = 128
-			self.kernel_size = [4,4]
+			self.kernel_size = (3,3)
 			self.stride = 2
-			self.padding = 
+			self.padding = (1,1)
 			self.dilation = 1
-			self.groups = 
+			self.groups = 1
 
 	class Linear(object):
 
 		def __init__(self):
-			self.num_outputs = 1024
+			self.num_outputs = 64
 			self.bias = False
 
 
@@ -49,57 +66,61 @@ class ConfigHidden1(object):
 class ConfigHidden2(object):
 
 	def __init__(self):
-		pass
+		self.linear1 = self.Linear1()
+		self.linear2 = self.Linear2()
+		self.linear3 = self.Linear3()
 
 	class Linear1(object):
 
 		def __init__(self):
-			self.num_inputs = 1024
-			self.num_outputs = 1024
+			self.num_inputs = 64
+			self.num_outputs = 64
 
 
 	class Linear2(object):
 
 		def __init__(self):
-			self.num_inputs = 1024
-			self.num_outputs = 1024
+			self.num_inputs = 64
+			self.num_outputs = 64
 
 
 	class Linear3(object):
 
 		def __init__(self):
-			self.num_inputs = 1024
-			self.num_outputs = 1024
+			self.num_inputs = 64
+			self.num_outputs = 64
 
 
 #####################################################
 #####################################################
 
 
-# class ConfigHidden3(object):
+class ConfigHidden3(object):
 
-# 	def __init__(self):
-# 		pass
+	def __init__(self):
+		self.linear1 = self.Linear1()
+		self.linear2 = self.Linear2()
+		self.linear3 = self.Linear3()
 
-# 	class Linear1(object):
+	class Linear1(object):
 
-# 		def __init__(self):
-# 			self.num_inputs = 
-# 			self.num_outputs = 
-
-
-# 	class Linear2(object):
-
-# 		def __init__(self):
-# 			self.num_inputs = 
-# 			self.num_outputs = 
+		def __init__(self):
+			self.num_inputs = 64
+			self.num_outputs = 64
 
 
-# 	class Linear3(object):
+	class Linear2(object):
 
-# 		def __init__(self):
-# 			self.num_inputs = 
-# 			self.num_outputs = 
+		def __init__(self):
+			self.num_inputs = 64
+			self.num_outputs = 64
+
+
+	class Linear3(object):
+
+		def __init__(self):
+			self.num_inputs = 64
+			self.num_outputs = 64
 
 
 #####################################################
@@ -109,31 +130,35 @@ class ConfigHidden2(object):
 class ConfigLadder1(object):
 
 	def __init__(self):
-		pass
+		self.conv1 = self.Conv1()
+		self.conv2 = self.Conv2()
+		self.linear = self.Linear()
 
 	class Conv1(object):
 
 		def __init__(self):
-			self.num_inputs = 3
+			self.shape = (1,28,28)
+			self.num_inputs = 1
 			self.num_outputs = 64
-			self.kernel_size = [4,4]
+			self.kernel_size = (3,3)
 			self.stride = 2
-			self.padding = 
+			self.padding = (1,1)
 			self.dilation = 1 
-			self.groups = 
+			self.groups = 1
 
 
 
 	class Conv2(object):
 
 		def __init__(self):
+			self.shape = (1,28,28)
 			self.num_inputs = 64
 			self.num_outputs = 128
-			self.kernel_size = [4,4]
+			self.kernel_size = (3,3)
 			self.stride = 2
-			self.padding = 
+			self.padding = (1,1)
 			self.dilation = 1
-			self.groups = 
+			self.groups = 1
 
 	class Linear(object):
 
@@ -149,28 +174,30 @@ class ConfigLadder1(object):
 class ConfigLadder2(object):
 
 	def __init__(self):
-		pass
+		self.linear1 = self.Linear1()
+		self.linear2 = self.Linear2()
+		self.linear3 = self.Linear3()
 
 	class Linear1(object):
 
 		def __init__(self):
-			self.num_inputs = 
-			self.num_outputs = 
+			self.num_inputs = 64
+			self.num_outputs = 64
 
 
 	class Linear2(object):
 
 		def __init__(self):
-			self.num_inputs = 
-			self.num_outputs = 
+			self.num_inputs = 64
+			self.num_outputs = 64
 
 
 	class Linear3(object):
 
 		def __init__(self):
-			self.num_inputs = 
-			self.mean_length =  
-			self.stddev_length = 
+			self.num_inputs = 64
+			self.mean_length =  2
+			self.stddev_length = 2
 
 
 
@@ -180,28 +207,30 @@ class ConfigLadder2(object):
 class ConfigLadder3(object):
 
 	def __init__(self):
-		pass
+		self.linear1 = self.Linear1()
+		self.linear2 = self.Linear2()
+		self.linear3 = self.Linear3()
 
 	class Linear1(object):
 
 		def __init__(self):
-			self.num_inputs = 
-			self.num_outputs = 
+			self.num_inputs = 64
+			self.num_outputs = 64
 
 
 	class Linear2(object):
 
 		def __init__(self):
-			self.num_inputs = 
-			self.num_outputs = 
+			self.num_inputs = 64
+			self.num_outputs = 64
 
 
 	class Linear3(object):
 
 		def __init__(self):
-			self.num_inputs = 
-			self.mean_length =  
-			self.stddev_length = 
+			self.num_inputs = 64
+			self.mean_length =  2
+			self.stddev_length = 2
 
 
 
@@ -221,18 +250,22 @@ class ConfigNoise(object):
 class ConfigGenerative1(object):
 
 	def __init__(self):
-		pass
+		self.conv1 = self.Conv1()
+		self.conv2 = self.Conv2()
+		self.linear = self.Linear()
+		self.linear_init = self.LinearInit()
 
 	class Conv1(object):
 
 		def __init__(self):
 			self.num_inputs = 3
 			self.num_outputs = 64
-			self.kernel_size = [4,4]
+			self.kernel_size = (3,3)
 			self.stride = 2
-			self.padding = 
+			self.padding = (1,1)
 			self.dilation = 1 
-			self.groups = 
+			self.groups = 1
+			self.output_padding = (1,1)
 
 
 
@@ -241,17 +274,28 @@ class ConfigGenerative1(object):
 		def __init__(self):
 			self.num_inputs = 64
 			self.num_outputs = 128
-			self.kernel_size = [4,4]
+			self.kernel_size = (3,3)
 			self.stride = 2
-			self.padding = 
+			self.padding = (1,1)
 			self.dilation = 1
-			self.groups = 
+			self.groups = 1
+			self.output_padding = (1,1)
+			self.dim1 = 28/4
+			self.dim2 = 28/4
+			self.dim3 = 28/4
+
+	class LinearInit(object):
+
+		def __init__(self):
+			self.num_inputs = 64
+			self.num_outputs = 64
 
 	class Linear(object):
 
 		def __init__(self):
-			self.mean_length =  2
-			self.stddev_length = 2
+			self.num_inputs = 64
+			self.num_outputs = 64
+
 
 
 #####################################################
@@ -261,28 +305,29 @@ class ConfigGenerative1(object):
 class ConfigGenerative2(object):
 
 	def __init__(self):
-		pass
+		self.linear1 = self.Linear1()
+		self.linear2 = self.Linear2()
+		self.linear3 = self.Linear3()
 
 	class Linear1(object):
 
 		def __init__(self):
-			self.num_inputs = 
-			self.num_outputs = 
+			self.num_inputs = 64
+			self.num_outputs = 64
 
 
 	class Linear2(object):
 
 		def __init__(self):
-			self.num_inputs = 
-			self.num_outputs = 
+			self.num_inputs = 64
+			self.num_outputs = 64
 
 
 	class Linear3(object):
 
 		def __init__(self):
-			self.num_inputs = 
-			self.mean_length =  
-			self.stddev_length = 
+			self.num_inputs = 64
+			self.num_outputs = 64
 
 
 
@@ -292,28 +337,28 @@ class ConfigGenerative2(object):
 class ConfigGenerative3(object):
 
 	def __init__(self):
-		pass
+		self.linear1 = self.Linear1()
+		self.linear2 = self.Linear2()
+		self.linear3 = self.Linear3()
 
 	class Linear1(object):
 
 		def __init__(self):
-			self.num_inputs = 
-			self.num_outputs = 
+			self.num_inputs = 64
+			self.num_outputs = 64
 
 
 	class Linear2(object):
 
 		def __init__(self):
-			self.num_inputs = 
-			self.num_outputs = 
+			self.num_inputs = 64
+			self.num_outputs = 64
 
 
 	class Linear3(object):
 
 		def __init__(self):
-			self.num_inputs = 
-			self.mean_length =  
-			self.stddev_length = 
+			self.num_outputs = 64
 
 
 

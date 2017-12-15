@@ -18,7 +18,7 @@ def parseCommandLine():
 	requiredTrain = parser.add_argument_group('Required Train/Test arguments')
 	requiredTrain.add_argument('-p', choices = ["train", "test", "dev"], type = str,
 						dest = 'phase', required = True, help = 'Training or Testing phase to be run')
-	requiredTrain.add_argument('-m', choices = ["vlae_small"], type = str,
+	requiredTrain.add_argument('-m', choices = ["vlae"], type = str,
 						dest = 'model', required = True, help = 'Model under consideration')
 
 	parser.add_argument('-ckpt', dest='ckpt_dir', default='/diskhdd/CS331b/checkpoint/', 
