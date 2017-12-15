@@ -4,7 +4,13 @@ import os
 import sys
 from config import *
 from models import *
+from torch import optim
+from torchvision import datasets, transforms
+import torch
 
+dtype = torch.cuda.FloatTensor
+torch.cuda.manual_seed(1)
+kwargs = {'num_workers': 1, 'pin_memory': True}
 
 def run_test_epoch(epoch, model, optimizer, test_loader):
 	model.eval()
@@ -15,23 +21,23 @@ def run_test_epoch(epoch, model, optimizer, test_loader):
 		data = data.cuda()
 		recon_batch, mu, logvar = model(data)
 		test_loss += model.loss_function(recon_batch, data, mu, logvar).data[0]
-		if i == 0:
-			n = min(data.size(0), 8)
-			comparison = torch.cat([data[:n],
-							recon_batch.view(args.batch_size, 1, 28, 28)[:n]])
-			save_image(comparison.data.cpu(),
-						'/diskhdd/cs333/results_' + str(epoch) + '.png', nrow=n)
+		# if i == 0:
+		# 	n = min(data.size(0), 8)
+		# 	comparison = torch.cat([data[:n],
+		# 					recon_batch.view(args.batch_size, 1, 28, 28)[:n]])
+		# 	save_image(comparison.data.cpu(),
+		# 				'/diskhdd/cs333/results_' + str(epoch) + '.png', nrow=n)
 
 	test_loss /= len(test_loader.dataset)
 	print('====> Test set loss: {:.4f}'.format(test_loss))
 
 
 
-def run_train_epoch(epoch, model, optimizer, train_loader, args):
+def run_train_epoch(epoch, model, optimizer, train_loader, args, batch_size):
 	model.train()
 	train_loss = 0
 	for batch_idx, (data, _) in enumerate(train_loader):
-		if(data.size(0)!=args.batch_size):
+		if(data.size(0) != batch_size):
 			break
 		data = Variable(data)
 		data = data.cuda()
@@ -57,15 +63,26 @@ def run_train_epoch(epoch, model, optimizer, train_loader, args):
 
 
 def train_model(args):
+	num_epochs = 50
+	batch_size = 32
+
 	cur_config = ConfigVLAE()
 	curModel = VLadder(args, cur_config)
 	curModel.cuda()
-	optimizer = optim.Adam(model.parameters(), lr=1e-3)
+	optimizer = optim.Adam(curModel.parameters(), lr=1e-3)
 
-	for epoch in range(1, args.epochs + 1):
-		run_train_epoch(epoch, model, optimizer, train_loader, args)
-		torch.save(model.state_dict(), '/diskhdd/cs333/checkpoints/initial_test/training_ckpt-' + str(epoch) + '.pt')
-		run_test_epoch(epoch, model, optimizer, test_loader)
+	train_loader = torch.utils.data.DataLoader(
+			 datasets.MNIST('/diskhdd/cs331b/data', train=True, download=True,
+		          transform=transforms.ToTensor()),
+					 batch_size=batch_size, shuffle=True, **kwargs)
+	test_loader = torch.utils.data.DataLoader(
+					datasets.MNIST('/diskhdd/cs331b/data', train=False, transform=transforms.ToTensor()),
+					batch_size=batch_size, shuffle=True, **kwargs)
+
+	for epoch in range(1, num_epochs + 1):
+		run_train_epoch(epoch, curModel, optimizer, train_loader, args, batch_size)
+		torch.save(curModel.state_dict(), '/diskhdd/cs331b/checkpoints/training_ckpt-' + str(epoch) + '.pt')
+		run_test_epoch(epoch, curModel, optimizer, test_loader)
 
 
 
