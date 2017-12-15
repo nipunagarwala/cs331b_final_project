@@ -19,8 +19,8 @@ def run_test_epoch(epoch, model, optimizer, test_loader):
 		# if args.cuda:
 		data = Variable(data, volatile=True)
 		data = data.cuda()
-		recon_batch, mu, logvar = model(data)
-		test_loss += model.loss_function(recon_batch, data, mu, logvar).data[0]
+		output_dict = model(data)
+		loss = model.loss_function(output_dict, data).data[0]
 		# if i == 0:
 		# 	n = min(data.size(0), 8)
 		# 	comparison = torch.cat([data[:n],
@@ -45,9 +45,8 @@ def run_train_epoch(epoch, model, optimizer, train_loader, args, batch_size):
 
 
 		
-		recon_batch, mu, logvar = model(data)
-		recon_batch.cuda()
-		loss = model.loss_function(recon_batch, data, mu, logvar)
+		output_dict = model(data)
+		loss = model.loss_function(output_dict, data)
 		loss.backward(retain_graph=True)
 		train_loss += loss.data[0]
 		optimizer.step()
@@ -96,6 +95,5 @@ def main(args):
 
 
 if __name__ == "__main__":
-	print("Heyyyy")
 	args = parseCommandLine()
 	main(args)

@@ -116,9 +116,7 @@ class HiddenLayerConv(nn.Module):
 
 	def _get_conv_output(self, shape):
 		bs = 1
-		print shape
 		input_dat = Variable(torch.rand(bs, *shape))
-		print input_dat.size()
 		output_feat = self._forward_features(input_dat)
 		n_size = output_feat.data.view(bs, -1).size(1)
 		return n_size
@@ -134,7 +132,7 @@ class HiddenLayerConv(nn.Module):
 		features = output.view(output.size(0), -1)
 		output = self.fc(features)
 
-		return self.output
+		return output
 
 
 
@@ -269,7 +267,7 @@ class GenerativeLayerConv(nn.Module):
 		self.deconv1 = Conv2DTrans_BN_ReLU(config_2)
 		self.deconv2 = nn.ConvTranspose2d(config_3.num_inputs, config_3.num_outputs, config_3.kernel_size, stride=config_3.stride, 
 							padding=config_3.padding, dilation=config_3.dilation, groups=config_3.groups) 
-		# self.comb_noise = CombineNoise(config_noise)
+		self.comb_noise = CombineNoise('gated_add', 32, 64, 'Combine_Noise_1')
 
 		self.config_3 = config_3
 		self.name = layer_name
@@ -298,13 +296,13 @@ class GenerativeLayerConv(nn.Module):
 
 class GenerativeLayerLadderFC(nn.Module):
 
-	def __init__(self, config_1, config_2, config_3, config_4, config_noise, layer_name):
+	def __init__(self, config_1, config_2, config_3, layer_name, config_init, config_noise=None):
 		super(GenerativeLayerLadderFC, self).__init__()
-		self.fc_init = FC_BN_ReLU(config_1)
-		self.fc1 = FC_BN_ReLU(config_2)
-		self.fc2 = FC_BN_ReLU(config_3)
-		self.fc3 = nn.Linear(config_3.num_outputs, config_4.num_outputs, bias=False)
-		# self.comb_noise = CombineNoise(config_noise)
+		self.fc_init = FC_BN_ReLU(config_init)
+		self.fc1 = FC_BN_ReLU(config_1)
+		self.fc2 = FC_BN_ReLU(config_2)
+		self.fc3 = nn.Linear(config_2.num_outputs, config_3.num_outputs, bias=False)
+		self.comb_noise = CombineNoise('gated_add', 32, 64, 'Combine_Noise_2')
 
 		self.name = layer_name
 
@@ -313,6 +311,7 @@ class GenerativeLayerLadderFC(nn.Module):
 		cur_state = latent_in
 		if ladder_in is not None:
 			cur_state = self.fc_init(ladder_in)
+			print cur_state.size()
 			if latent_in is not None:
 				cur_state = self.comb_noise(latent_in, ladder_in)
 			else:
@@ -322,7 +321,12 @@ class GenerativeLayerLadderFC(nn.Module):
 			print("Generative layer must be given an input")
 			exit(1)
 
-		output = self.fc3(self.fc2(self.fc1(cur_state)))
+		print cur_state.size()
+		cur_state = self.fc1(cur_state)
+		cur_state = self.fc2(cur_state)
+		cur_state = self.fc3(cur_state)
+		output = cur_state
+		print("Completed")
 
 		return output
 
@@ -344,26 +348,26 @@ class GenerativeLayerSimpleFC(nn.Module):
 		
 
 
-# class CombineNoise(nn.Module):
+class CombineNoise(nn.Module):
 
-# 	def __init__(self, config, layer_name):
-# 		self.config = config
-# 		self.layer_name = layer_name
+	def __init__(self, type, batch_size, dim_size, layer_name):
+		super(CombineNoise, self).__init__()
+		self.type = type
+		self.layer_name = layer_name
+		self.gate_var = Variable(torch.randn(batch_size, dim_size).cuda(), requires_grad=True)
 
 
-# 	def forward(self, latent_in, ladder_in, gate=None):
-# 		if self.config.name == 'concat':
-# 			return torch.cat((latent_in, ladder_in), len(list(ladder_in.size()))-1 )
-
-# 		else:
-
-# 			if self.config.name == 'add':
-# 				return latent_in + ladder_in
-# 			elif self.config.name == 'gated_add':
-# 				return latent_in + gate*ladder_in
-# 			else:
-# 				print("Wrong method name used for CombineNoise Class")
-# 				exit(1)
+	def forward(self, latent_in, ladder_in):
+		if self.type == 'concat':
+			return torch.cat((latent_in, ladder_in), len(list(ladder_in.size()))-1 )
+		else:
+			if self.type == 'add':
+				return latent_in + ladder_in
+			elif self.type == 'gated_add':
+				return latent_in + self.gate_var*ladder_in
+			else:
+				print("Wrong method name used for CombineNoise Class")
+				exit(1)
 
 
 
