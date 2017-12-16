@@ -44,21 +44,9 @@ class VLadder(nn.Module):
 
 
 	def encode(self, x):
-		pass
-
-	def decode(self, x):
-		pass
-
-	def reparametrization(self, x):
-		pass
-
-
-
-
-	def forward(self, x):
 		# Define the encoding pass on the network
 		output = {}
-		sample = {}
+
 		output['d1'] = self.hidden_d1(x)
 		output['z1_mu'], output['z1_sigma'] = self.latent_z1(x)
 
@@ -68,41 +56,59 @@ class VLadder(nn.Module):
 		output['d3'] = self.hidden_d3(output['d2'])
 		output['z3_mu'], output['z3_sigma'] = self.latent_z3(output['d2'])
 
+		return output
 
+	def decode(self, x):
+		output = {}
+
+		output['train3'] =  self.generative_g3(x['z3'])
+		output['train2'] = self.generative_g2(output['train3'], x['z2'])
+		output['train1'] = self.generative_g1(output['train2'], x['z1'])
+		output['out'] = self.read_out(output['train1'])
+
+		return output
+
+	def reparametrization(self, x):
+		sample = {}
 		# Define the samples that we take on the mean and standard deviations
-		if self.args.phase == 'train':
-			normal_dist_var = Variable(torch.randn(self.config.batch_size, self.config.ladder1_dim).cuda(), requires_grad=False)
-			sample['z1'] = output['z1_mu'] + torch.mul(output['z1_sigma'], normal_dist_var)
+		normal_dist_var = Variable(torch.randn(self.config.batch_size, self.config.ladder1_dim).cuda(), requires_grad=False)
+		sample['z1'] = x['z1_mu'] + torch.mul(x['z1_sigma'], normal_dist_var)
 
-			normal_dist_var = Variable(torch.randn(self.config.batch_size, self.config.ladder1_dim).cuda(), requires_grad=False)
-			sample['z2'] = output['z2_mu'] + torch.mul(output['z2_sigma'], normal_dist_var)
+		normal_dist_var = Variable(torch.randn(self.config.batch_size, self.config.ladder2_dim).cuda(), requires_grad=False)
+		sample['z2'] = x['z2_mu'] + torch.mul(x['z2_sigma'], normal_dist_var)
 
-			normal_dist_var = Variable(torch.randn(self.config.batch_size, self.config.ladder1_dim).cuda(), requires_grad=False)
-			sample['z3'] = output['z3_mu'] + torch.mul(output['z3_sigma'], normal_dist_var)
+		normal_dist_var = Variable(torch.randn(self.config.batch_size, self.config.ladder3_dim).cuda(), requires_grad=False)
+		sample['z3'] = x['z3_mu'] + torch.mul(x['z3_sigma'], normal_dist_var)
+
+		return sample
+
+	def sample(self):
+		sample = {}
+
+		sample['z1'] = Variable(torch.randn(self.config.batch_size, self.config.ladder1_dim).cuda(), requires_grad=False)
+		sample['z2'] = Variable(torch.randn(self.config.batch_size, self.config.ladder2_dim).cuda(), requires_grad=False)
+		sample['z3'] = Variable(torch.randn(self.config.batch_size, self.config.ladder3_dim).cuda(), requires_grad=False)
+
+		return sample
 
 
-		# Defines the generative and the decoder network
-		if self.args.phase == 'train':
-			output['train3'] =  self.generative_g3(sample['z3'])
-			output['train2'] = self.generative_g2(output['train3'], sample['z2'])
-			output['train1'] = self.generative_g1(output['train2'], sample['z1'])
-			output['out'] = self.read_out(output['train1'])
+	def generate_samples(self):
+		sample = self.sample()
+		output = self.decode(sample)
 
-		elif self.args.phase == 'generate':
+		return output
 
-			normal_dist_var1 = Variable(torch.randn(self.config.batch_size, self.config.ladder1_dim), requires_grad=False)
-			normal_dist_var2 = Variable(torch.randn(self.config.batch_size, self.config.ladder2_dim), requires_grad=False)
-			normal_dist_var3 = Variable(torch.randn(self.config.batch_size, self.config.ladder3_dim), requires_grad=False)
 
-			output['gen3'] = self.generative_g3(normal_dist_var3)
-			output['gen2'] = self.generative_g2(output['gen3'], normal_dist_var2)
-			output['gen1'] = self.generative_g1(output['gen2'], normal_dist_var1)
-			output['out'] = self.read_out(output['gen1'])
+	def forward(self, x):
+		encoding = {}
+		sample = {}
+		output = {}
 
-		else:
-			print("Option has either not been implemented or is incorrect ......") 
-			exit(1)
-
+		encoding = self.encode(x)
+		sample = self.reparametrization(encoding)
+		output = self.decode(sample)
+		output.update(sample)
+		output.update(encoding)
 
 		return output
 
@@ -133,7 +139,7 @@ class VLadder(nn.Module):
 
 		loss = F.binary_cross_entropy(output['out'].cuda(), target_y.cuda(), size_average=True).cuda()
 
-		return regularization
+		return regularization + 8*loss
 
 
 	#####################################################

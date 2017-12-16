@@ -6,6 +6,7 @@ from config import *
 from models import *
 from torch import optim
 from torchvision import datasets, transforms
+from torchvision.utils import save_image
 import torch
 
 dtype = torch.cuda.FloatTensor
@@ -13,23 +14,35 @@ torch.cuda.manual_seed(1)
 kwargs = {'num_workers': 1, 'pin_memory': True}
 
 
-def run_test_epoch(epoch, model, optimizer, test_loader):
+def run_generation(num_samples, model, batch_size):
+	model.eval()
+	output_dict = model.generate_samples()
+	comparison = output_dict['out'].view(batch_size, 1, 28, 28)
+	save_image(comparison.data.cpu(),
+						'/diskhdd/cs331b/results/generation_results' + '.png', nrow=batch_size/4)
+
+
+def run_test_epoch(epoch, model, optimizer, test_loader, batch_size):
 	model.eval()
 	test_loss = 0
+	last_val = 0
 	for i, (data, _) in enumerate(test_loader):
 		# if args.cuda:
+		if(data.size(0) != batch_size):
+			last_val = data.size(0)
+			break
 		data = Variable(data, volatile=True)
 		data = data.cuda()
 		output_dict = model(data)
-		loss = model.loss_function(output_dict, data).data[0]
+		test_loss += model.loss_function(output_dict, data).data[0]
 		if i == 0:
 			n = min(data.size(0), 8)
 			comparison = torch.cat([data[:n],
-							output_dict['out'].view(args.batch_size, 1, 28, 28)[:n]])
+							output_dict['out'].view(batch_size, 1, 28, 28)[:n]])
 			save_image(comparison.data.cpu(),
-						'/diskhdd/cs331b/results_' + str(epoch) + '.png', nrow=n)
+						'/diskhdd/cs331b/results/decompose_results_' + str(epoch) + '.png', nrow=n)
 
-	test_loss /= len(test_loader.dataset)
+	test_loss /= (len(test_loader.dataset) - last_val)
 	print('====> Test set loss: {:.4f}'.format(test_loss))
 
 
@@ -44,8 +57,6 @@ def run_train_epoch(epoch, model, optimizer, train_loader, args, batch_size):
 		data = data.cuda()
 		optimizer.zero_grad()
 
-
-		
 		output_dict = model(data)
 		loss = model.loss_function(output_dict, data)
 		loss.backward(retain_graph=True)
@@ -61,6 +72,16 @@ def run_train_epoch(epoch, model, optimizer, train_loader, args, batch_size):
 		  epoch, train_loss / len(train_loader.dataset)))
 
 
+def model_generate_samples(args):
+	batch_size = 32
+
+	cur_config = ConfigVLAE()
+	curModel = VLadder(args, cur_config)
+	curModel.load_state_dict(torch.load('/diskhdd/cs331b/checkpoints/decompose_training_ckpt-23.pt'))
+	curModel.cuda()
+	run_generation(batch_size, curModel, batch_size)
+
+
 def train_model(args):
 	num_epochs = 50
 	batch_size = 32
@@ -68,7 +89,7 @@ def train_model(args):
 	cur_config = ConfigVLAE()
 	curModel = VLadder(args, cur_config)
 	curModel.cuda()
-	optimizer = optim.Adam(curModel.parameters(), lr=1e-3)
+	optimizer = optim.Adam(curModel.parameters(), lr=2e-4)
 
 	train_loader = torch.utils.data.DataLoader(
 			 datasets.MNIST('/diskhdd/cs331b/data', train=True, download=True,
@@ -80,8 +101,8 @@ def train_model(args):
 
 	for epoch in range(1, num_epochs + 1):
 		run_train_epoch(epoch, curModel, optimizer, train_loader, args, batch_size)
-		torch.save(curModel.state_dict(), '/diskhdd/cs331b/checkpoints/training_ckpt-' + str(epoch) + '.pt')
-		run_test_epoch(epoch, curModel, optimizer, test_loader)
+		torch.save(curModel.state_dict(), '/diskhdd/cs331b/checkpoints/decompose_training_ckpt-' + str(epoch) + '.pt')
+		run_test_epoch(epoch, curModel, optimizer, test_loader, batch_size)
 
 
 
@@ -89,6 +110,9 @@ def train_model(args):
 def main(args):
 	if args.phase == 'train':
 		train_model(args)
+	elif args.phase == 'generate':
+		model_generate_samples(args)
+
 	else:
 		print("The phase option parse is either incorrect or not implemented yet. Sorry for the inconvenience .....")
 		exit(1)

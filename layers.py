@@ -269,7 +269,7 @@ class GenerativeLayerConv(nn.Module):
 		self.deconv2 = nn.ConvTranspose2d(config_3.num_inputs, config_3.num_outputs, config_3.kernel_size, stride=config_3.stride, 
 							padding=config_3.padding, dilation=config_3.dilation, output_padding=config_3.output_padding,
 							groups=config_3.groups) 
-		self.comb_noise = CombineNoise('gated_add', 32, 64, 'Combine_Noise_1')
+		self.comb_noise = CombineNoise('gated_add', 32, 1024, 'Combine_Noise_1')
 
 		self.config_2 = config_2
 		self.name = layer_name
@@ -305,7 +305,7 @@ class GenerativeLayerLadderFC(nn.Module):
 		self.fc1 = FC_BN_ReLU(config_1)
 		self.fc2 = FC_BN_ReLU(config_2)
 		self.fc3 = nn.Linear(config_2.num_outputs, config_3.num_outputs, bias=False)
-		self.comb_noise = CombineNoise('gated_add', 32, 64, 'Combine_Noise_2')
+		self.comb_noise = CombineNoise('gated_add', 32, 1024, 'Combine_Noise_2')
 
 		self.name = layer_name
 

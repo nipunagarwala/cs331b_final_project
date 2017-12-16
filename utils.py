@@ -16,7 +16,7 @@ def parseCommandLine():
 
 	print("Parsing Command Line Arguments...")
 	requiredTrain = parser.add_argument_group('Required Train/Test arguments')
-	requiredTrain.add_argument('-p', choices = ["train", "test", "dev"], type = str,
+	requiredTrain.add_argument('-p', choices = ["train", "test", 'generate'], type = str,
 						dest = 'phase', required = True, help = 'Training or Testing phase to be run')
 	requiredTrain.add_argument('-m', choices = ["vlae"], type = str,
 						dest = 'model', required = True, help = 'Model under consideration')

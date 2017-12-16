@@ -39,7 +39,7 @@ class ConfigHidden1(object):
 			self.num_inputs = 1
 			self.num_outputs = 64
 			self.kernel_size = (3,3)
-			self.stride = 2
+			self.stride = (2,2)
 			self.padding = (1,1)
 			self.dilation = 1
 			self.groups = 1
@@ -61,7 +61,7 @@ class ConfigHidden1(object):
 	class Linear(object):
 
 		def __init__(self):
-			self.num_outputs = 64
+			self.num_outputs = 1024
 			self.bias = False
 
 
@@ -78,22 +78,22 @@ class ConfigHidden2(object):
 	class Linear1(object):
 
 		def __init__(self):
-			self.num_inputs = 64
-			self.num_outputs = 64
+			self.num_inputs = 1024
+			self.num_outputs = 1024
 
 
 	class Linear2(object):
 
 		def __init__(self):
-			self.num_inputs = 64
-			self.num_outputs = 64
+			self.num_inputs = 1024
+			self.num_outputs = 1024
 
 
 	class Linear3(object):
 
 		def __init__(self):
-			self.num_inputs = 64
-			self.num_outputs = 64
+			self.num_inputs = 1024
+			self.num_outputs = 1024
 
 
 #####################################################
@@ -110,22 +110,22 @@ class ConfigHidden3(object):
 	class Linear1(object):
 
 		def __init__(self):
-			self.num_inputs = 64
-			self.num_outputs = 64
+			self.num_inputs = 1024
+			self.num_outputs = 1024
 
 
 	class Linear2(object):
 
 		def __init__(self):
-			self.num_inputs = 64
-			self.num_outputs = 64
+			self.num_inputs = 1024
+			self.num_outputs = 1024
 
 
 	class Linear3(object):
 
 		def __init__(self):
-			self.num_inputs = 64
-			self.num_outputs = 64
+			self.num_inputs = 1024
+			self.num_outputs = 1024
 
 
 #####################################################
@@ -186,21 +186,21 @@ class ConfigLadder2(object):
 	class Linear1(object):
 
 		def __init__(self):
-			self.num_inputs = 64
-			self.num_outputs = 64
+			self.num_inputs = 1024
+			self.num_outputs = 1024
 
 
 	class Linear2(object):
 
 		def __init__(self):
-			self.num_inputs = 64
-			self.num_outputs = 64
+			self.num_inputs = 1024
+			self.num_outputs = 1024
 
 
 	class Linear3(object):
 
 		def __init__(self):
-			self.num_inputs = 64
+			self.num_inputs = 1024
 			self.mean_length =  2
 			self.stddev_length = 2
 
@@ -219,21 +219,21 @@ class ConfigLadder3(object):
 	class Linear1(object):
 
 		def __init__(self):
-			self.num_inputs = 64
-			self.num_outputs = 64
+			self.num_inputs = 1024
+			self.num_outputs = 1024
 
 
 	class Linear2(object):
 
 		def __init__(self):
-			self.num_inputs = 64
-			self.num_outputs = 64
+			self.num_inputs = 1024
+			self.num_outputs = 1024
 
 
 	class Linear3(object):
 
 		def __init__(self):
-			self.num_inputs = 64
+			self.num_inputs = 1024
 			self.mean_length =  2
 			self.stddev_length = 2
 
@@ -293,12 +293,12 @@ class ConfigGenerative1(object):
 
 		def __init__(self):
 			self.num_inputs = 2
-			self.num_outputs = 64
+			self.num_outputs = 1024
 
 	class Linear(object):
 
 		def __init__(self):
-			self.num_inputs = 64
+			self.num_inputs = 1024
 			self.num_outputs = 6272
 
 
@@ -318,28 +318,28 @@ class ConfigGenerative2(object):
 	class Linear1(object):
 
 		def __init__(self):
-			self.num_inputs = 64
-			self.num_outputs = 64
+			self.num_inputs = 1024
+			self.num_outputs = 1024
 
 
 	class Linear2(object):
 
 		def __init__(self):
-			self.num_inputs = 64
-			self.num_outputs = 64
+			self.num_inputs = 1024
+			self.num_outputs = 1024
 
 
 	class Linear3(object):
 
 		def __init__(self):
-			self.num_inputs = 64
-			self.num_outputs = 64
+			self.num_inputs = 1024
+			self.num_outputs = 1024
 
 	class LinearInit(object):
 
 		def __init__(self):
 			self.num_inputs = 2
-			self.num_outputs = 64
+			self.num_outputs = 1024
 
 
 
@@ -357,20 +357,20 @@ class ConfigGenerative3(object):
 
 		def __init__(self):
 			self.num_inputs = 2
-			self.num_outputs = 64
+			self.num_outputs = 1024
 
 
 	class Linear2(object):
 
 		def __init__(self):
-			self.num_inputs = 64
-			self.num_outputs = 64
+			self.num_inputs = 1024
+			self.num_outputs = 1024
 
 
 	class Linear3(object):
 
 		def __init__(self):
-			self.num_outputs = 64
+			self.num_outputs = 1024
 
 
 
