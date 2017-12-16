@@ -53,7 +53,7 @@ class VLadder(nn.Module):
 		output['d2'] = self.hidden_d2(output['d1'])
 		output['z2_mu'], output['z2_sigma'] = self.latent_z2(output['d1'])
 
-		output['d3'] = self.hidden_d3(output['d2'])
+		# output['d3'] = self.hidden_d3(output['d2'])
 		output['z3_mu'], output['z3_sigma'] = self.latent_z3(output['d2'])
 
 		return output

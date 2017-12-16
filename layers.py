@@ -354,7 +354,7 @@ class CombineNoise(nn.Module):
 		super(CombineNoise, self).__init__()
 		self.type = type
 		self.layer_name = layer_name
-		self.gate_var = Variable(torch.randn(batch_size, dim_size).cuda(), requires_grad=True)
+		self.gate_var = Variable(torch.randn(1, dim_size).cuda(), requires_grad=True)
 
 
 	def forward(self, latent_in, ladder_in):

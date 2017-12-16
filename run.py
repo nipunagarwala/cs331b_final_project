@@ -15,11 +15,15 @@ kwargs = {'num_workers': 1, 'pin_memory': True}
 
 
 def run_generation(num_samples, model, batch_size):
+	model.train()
+	output_dict = model.generate_samples()
+	output_dict = model.generate_samples()
+	output_dict = model.generate_samples()
 	model.eval()
 	output_dict = model.generate_samples()
 	comparison = output_dict['out'].view(batch_size, 1, 28, 28)
 	save_image(comparison.data.cpu(),
-						'/diskhdd/cs331b/results/generation_results' + '.png', nrow=batch_size/4)
+						'/diskhdd/cs331b/results/generation_results_new' + '.png', nrow=8)
 
 
 def run_test_epoch(epoch, model, optimizer, test_loader, batch_size):
@@ -40,7 +44,7 @@ def run_test_epoch(epoch, model, optimizer, test_loader, batch_size):
 			comparison = torch.cat([data[:n],
 							output_dict['out'].view(batch_size, 1, 28, 28)[:n]])
 			save_image(comparison.data.cpu(),
-						'/diskhdd/cs331b/results/decompose_results_' + str(epoch) + '.png', nrow=n)
+						'/diskhdd/cs331b/results/new_results_' + str(epoch) + '.png', nrow=n)
 
 	test_loss /= (len(test_loader.dataset) - last_val)
 	print('====> Test set loss: {:.4f}'.format(test_loss))
@@ -59,7 +63,7 @@ def run_train_epoch(epoch, model, optimizer, train_loader, args, batch_size):
 
 		output_dict = model(data)
 		loss = model.loss_function(output_dict, data)
-		loss.backward(retain_graph=True)
+		loss.backward()
 		train_loss += loss.data[0]
 		optimizer.step()
 		if batch_idx % 32*10 == 0:
@@ -73,11 +77,11 @@ def run_train_epoch(epoch, model, optimizer, train_loader, args, batch_size):
 
 
 def model_generate_samples(args):
-	batch_size = 32
+	batch_size = 8
 
 	cur_config = ConfigVLAE()
 	curModel = VLadder(args, cur_config)
-	curModel.load_state_dict(torch.load('/diskhdd/cs331b/checkpoints/decompose_training_ckpt-23.pt'))
+	curModel.load_state_dict(torch.load('/diskhdd/cs331b/checkpoints/new_training_ckpt-11.pt'))
 	curModel.cuda()
 	run_generation(batch_size, curModel, batch_size)
 
@@ -101,7 +105,7 @@ def train_model(args):
 
 	for epoch in range(1, num_epochs + 1):
 		run_train_epoch(epoch, curModel, optimizer, train_loader, args, batch_size)
-		torch.save(curModel.state_dict(), '/diskhdd/cs331b/checkpoints/decompose_training_ckpt-' + str(epoch) + '.pt')
+		torch.save(curModel.state_dict(), '/diskhdd/cs331b/checkpoints/new_training_ckpt-' + str(epoch) + '.pt')
 		run_test_epoch(epoch, curModel, optimizer, test_loader, batch_size)
 
 
