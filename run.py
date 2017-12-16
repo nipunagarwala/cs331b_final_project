@@ -44,7 +44,7 @@ def run_test_epoch(epoch, model, optimizer, test_loader, batch_size):
 			comparison = torch.cat([data[:n],
 							output_dict['out'].view(batch_size, 1, 28, 28)[:n]])
 			save_image(comparison.data.cpu(),
-						'/diskhdd/cs331b/results/new_results_' + str(epoch) + '.png', nrow=n)
+						'/diskhdd/cs331b/results/simple_vae/results_' + str(epoch) + '.png', nrow=n)
 
 	test_loss /= (len(test_loader.dataset) - last_val)
 	print('====> Test set loss: {:.4f}'.format(test_loss))
@@ -90,8 +90,16 @@ def train_model(args):
 	num_epochs = 50
 	batch_size = 32
 
-	cur_config = ConfigVLAE()
-	curModel = VLadder(args, cur_config)
+	if args.model == 'vlae':
+		cur_config = ConfigVLAE()
+		curModel = VLadder(args, cur_config)
+	elif args.model == 'vae':
+		cur_config = ConfigVAE()
+		curModel = SimpleVAE(cur_config, 'SimpleVAE')
+	else:
+		print("Wrong model has been input ....")
+		exit(1)
+
 	curModel.cuda()
 	optimizer = optim.Adam(curModel.parameters(), lr=2e-4)
 
@@ -105,7 +113,7 @@ def train_model(args):
 
 	for epoch in range(1, num_epochs + 1):
 		run_train_epoch(epoch, curModel, optimizer, train_loader, args, batch_size)
-		torch.save(curModel.state_dict(), '/diskhdd/cs331b/checkpoints/new_training_ckpt-' + str(epoch) + '.pt')
+		torch.save(curModel.state_dict(), '/diskhdd/cs331b/checkpoints/simple_vae_ckpt/training_ckpt-' + str(epoch) + '.pt')
 		run_test_epoch(epoch, curModel, optimizer, test_loader, batch_size)
 
 

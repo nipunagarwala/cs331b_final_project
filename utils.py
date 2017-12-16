@@ -18,7 +18,7 @@ def parseCommandLine():
 	requiredTrain = parser.add_argument_group('Required Train/Test arguments')
 	requiredTrain.add_argument('-p', choices = ["train", "test", 'generate'], type = str,
 						dest = 'phase', required = True, help = 'Training or Testing phase to be run')
-	requiredTrain.add_argument('-m', choices = ["vlae"], type = str,
+	requiredTrain.add_argument('-m', choices = ["vlae", 'vae'], type = str,
 						dest = 'model', required = True, help = 'Model under consideration')
 
 	parser.add_argument('-ckpt', dest='ckpt_dir', default='/diskhdd/CS331b/checkpoint/', 
@@ -45,6 +45,8 @@ def quantizeParseArgs():
 	parser.add_argument('--overflow_rate', type=float, default=0.0, help='overflow rate')
 	parser.add_argument('--phase', choices = ['quantize', 'tune'], type = str,
 						dest = 'phase', required = True, help = 'Simple Quantization of Model or Fine tuning of quantized model`')
+	parser.add_argument('--model', choices = ["vlae", 'vae'], type = str,
+						dest = 'model', required = True, help = 'Model under consideration')
 	args = parser.parse_args()
 
 	return args

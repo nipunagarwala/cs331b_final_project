@@ -377,3 +377,121 @@ class ConfigGenerative3(object):
 #####################################################
 #####################################################
 
+
+
+
+class ConfigVAE(object):
+
+	def __init__(self):
+		self.encoder = Encoder()
+		self.decoder = Decoder()
+		self.conv1 = self.encoder.Conv1()
+		self.conv2 = self.encoder.Conv2()
+		self.fc1 = self.encoder.FC1()
+		self.fc2 = self.encoder.FC2()
+		self.final = self.encoder.FCFinal()
+		self.gen_fc1 = self.decoder.FC1Gen()
+		self.gen_fc2 = self.decoder.FC2Gen()
+		self.gen_conv1 = self.decoder.Conv1Gen()
+		self.gen_conv2 = self.decoder.Conv2Gen()
+		self.batch_size = 32
+		self.training = True
+
+
+
+class Encoder(object):
+
+	def __init__(self):
+		pass
+
+
+
+	class Conv1(object):
+		def __init__(self):
+			self.num_inputs = 1
+			self.num_outputs = 64
+			self.kernel_size = (3,3)
+			self.stride = (2,2)
+			self.padding = (1,1)
+			self.dilation = 1
+			self.groups = 1
+			self.shape = (1, 28, 28)
+
+
+
+	class Conv2(object):
+		def __init__(self):
+			self.num_inputs = 64
+			self.num_outputs = 128
+			self.kernel_size = (3,3)
+			self.stride = 2
+			self.padding = (1,1)
+			self.dilation = 1
+			self.groups = 1
+
+
+	class FC1(object):
+		def __init__(self):
+			self.num_inputs = None
+			self.num_outputs = 256
+			self.bias = False
+
+
+
+	class FC2(object):
+		def __init__(self):
+			self.num_inputs = 256
+			self.num_outputs = 256
+			self.bias = False
+
+
+
+	class FCFinal(object):
+		def __init__(self):
+			self.mean_len = 4
+			self.stddev_len = 4
+
+
+class Decoder(object):
+
+	def __init__(self):
+		pass
+
+	class Conv1Gen(object):
+		def __init__(self):
+			self.num_inputs = 128
+			self.num_outputs = 64
+			self.kernel_size = (3,3)
+			self.stride = (2,2)
+			self.padding = (1,1)
+			self.dilation = 1
+			self.groups = 1
+			self.output_padding = (1,1)
+
+
+	class Conv2Gen(object):
+		def __init__(self):
+			self.num_inputs = 64
+			self.num_outputs = 1
+			self.kernel_size = (3,3)
+			self.stride = (2,2)
+			self.padding = (1,1)
+			self.dilation = 1
+			self.groups = 1
+			self.output_padding = (1,1)
+
+
+
+	class FC1Gen(object):
+		def __init__(self):
+			self.num_inputs = 4
+			self.num_outputs = 256
+			self.bias = False
+
+
+
+	class FC2Gen(object):
+		def __init__(self):
+			self.num_inputs =  256
+			self.num_outputs = 6272
+			self.bias = False

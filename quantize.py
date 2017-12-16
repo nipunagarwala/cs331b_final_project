@@ -3,9 +3,22 @@ import torch
 from torch import nn
 from collections import OrderedDict
 import math
+import numpy as np
+import random
 
 
 
+def prob_round(x, prec = 0):
+    fixup = np.sign(x) * 10**prec
+    x *= fixup
+    is_up = np.random.random(x.shape) < (x-x.astype(int))
+    is_up_float = is_up.astype(int)
+    is_down_float = np.logical_not(is_up.astype(int))
+    round_up_half = np.ceil(is_up_float*x)
+    round_down_half = np.floor(is_down_float*x)
+    # round_func = math.ceil if is_up else math.floor
+    return (round_up_half + round_down_half)/fixup
+    # return round_func(x) / fixup
 
 
 def compute_integral_part(input, overflow_rate):
@@ -15,6 +28,7 @@ def compute_integral_part(input, overflow_rate):
 	v = sorted_value[split_idx]
 	if isinstance(v, Variable):
 		v = v.data.cpu().numpy()[0]
+
 	sf = math.ceil(math.log(v+1e-12, 2))
 	return sf
 
@@ -26,8 +40,9 @@ def linear_quantize(input, sf, bits):
 	bound = math.pow(2.0, bits-1)
 	min_val = - bound
 	max_val = bound - 1
-	rounded = torch.floor(input / delta + 0.5)
-
+	# rounded = torch.floor(input / delta + 0.5)
+	rounded = prob_round(input.cpu().numpy() / delta + 0.5)
+	rounded = torch.from_numpy(rounded).cuda()
 	clipped_value = torch.clamp(rounded, min_val, max_val) * delta
 	return clipped_value
 
