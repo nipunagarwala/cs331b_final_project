@@ -15,7 +15,7 @@ def compute_integral_part(input, overflow_rate):
 	v = sorted_value[split_idx]
 	if isinstance(v, Variable):
 		v = v.data.cpu().numpy()[0]
-	sf = math.ceil(math.log2(v+1e-12))
+	sf = math.ceil(math.log(v+1e-12, 2))
 	return sf
 
 def linear_quantize(input, sf, bits):
