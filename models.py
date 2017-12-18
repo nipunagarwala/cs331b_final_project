@@ -7,12 +7,13 @@ import torch.nn as nn
 import torch.nn.functional as F
 from layers import *
 from torch.autograd import Variable
+from quantize import *
 
 
 
 class VLadder(nn.Module):
 
-	def __init__(self, args, config):
+	def __init__(self, args, config, quant_method = None):
 		super(VLadder, self).__init__()
 		self.hidden_d1 = HiddenLayerConv(config.hidden1.conv1, config.hidden1.conv2,
 								 config.hidden1.linear, "hidden_layer_1")
@@ -41,6 +42,8 @@ class VLadder(nn.Module):
 
 		self.config = config
 		self.args = args
+		self.quant_method = quant_method
+		self.scale = True
 
 
 	def encode(self, x):
@@ -145,7 +148,7 @@ class VLadder(nn.Module):
 
 class SimpleVAE(nn.Module):
 
-	def __init__(self, config, model_name):
+	def __init__(self, config, model_name, quant_method = None, bits = None):
 		super(SimpleVAE, self).__init__()
 
 		self.conv1 = Conv2D_BN_ReLU(config.conv1)
@@ -171,6 +174,10 @@ class SimpleVAE(nn.Module):
 
 		self.config = config
 		self.name = model_name
+		self.quant_method = quant_method
+		self.bits = bits
+		self.scale = 0
+		self.sf = None
 
 
 
@@ -215,6 +222,7 @@ class SimpleVAE(nn.Module):
 
 	def reparametrization(self, mean_vec, log_stddev):
 		if self.training:
+			# normal_dist_var = Variable(torch.randn(self.config.batch_size, self.config.final.stddev_len).cuda().half(), requires_grad=False)
 			normal_dist_var = Variable(torch.randn(self.config.batch_size, self.config.final.stddev_len).cuda(), requires_grad=False)
 			# std = self.log_stddev.mul(0.5).exp_()
 			# eps = Variable(std.data.new(std.size()).normal_())
@@ -227,9 +235,28 @@ class SimpleVAE(nn.Module):
 
 
 	def forward(self, x):
+		np.set_printoptions(threshold='nan')
+		finalIn = x
+		if self.quant_method != None:
+			if self.scale < 3:
+				sf_new = self.bits - 1 - compute_integral_part(finalIn, 0)
+				self.sf = min(self.sf, sf_new) if self.sf is not None else sf_new
+				self.scale += 1
+			elif self.quant_method == 'linear':
+				# print("OH YEAH")
+				# self.scale += 1
+				finalIn = linear_quantize(x, self.sf, self.bits)
+			elif self.quant_method == 'log':
+				finalIn = log_linear_quantize(x, self.sf, self.bits)
+
+		# if self.scale == 4:
+		# 	print np.where(x.data.cpu().numpy()[0] > 0.0)
+		# 	print np.where(finalIn.data.cpu().numpy()[0] > 0.0)
+		# 	exit(1)
+		
 		output = {}
 
-		mean_vec, log_stddev = self.encoder(x)
+		mean_vec, log_stddev = self.encoder(finalIn)
 		sample = self.reparametrization(mean_vec, log_stddev)
 		decoder_out = self.decoder(sample)
 		output['mu'] = mean_vec
@@ -249,7 +276,10 @@ class SimpleVAE(nn.Module):
 
 		# print pred_y
 		# print target_y
-		loss = F.binary_cross_entropy(output['out'], target_y, size_average=True).cuda()
+		pred_out = output['out'].clamp(min=1e-4, max=1)
+		target_y = target_y.clamp(min=1e-4, max=1)
+		pred_out[pred_out != pred_out] = 0
+		loss = F.binary_cross_entropy(pred_out, target_y, size_average=True).cuda()
 		# self.loss = nn.MSELoss(size_average=False)
 
 		return regularization + loss

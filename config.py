@@ -408,14 +408,14 @@ class Encoder(object):
 
 	class Conv1(object):
 		def __init__(self):
-			self.num_inputs = 1
+			self.num_inputs = 3
 			self.num_outputs = 64
 			self.kernel_size = (3,3)
 			self.stride = (2,2)
 			self.padding = (1,1)
 			self.dilation = 1
 			self.groups = 1
-			self.shape = (1, 28, 28)
+			self.shape = (3, 32, 32)
 
 
 
@@ -448,8 +448,8 @@ class Encoder(object):
 
 	class FCFinal(object):
 		def __init__(self):
-			self.mean_len = 4
-			self.stddev_len = 4
+			self.mean_len = 10
+			self.stddev_len = 10
 
 
 class Decoder(object):
@@ -472,7 +472,7 @@ class Decoder(object):
 	class Conv2Gen(object):
 		def __init__(self):
 			self.num_inputs = 64
-			self.num_outputs = 1
+			self.num_outputs = 3
 			self.kernel_size = (3,3)
 			self.stride = (2,2)
 			self.padding = (1,1)
@@ -484,7 +484,7 @@ class Decoder(object):
 
 	class FC1Gen(object):
 		def __init__(self):
-			self.num_inputs = 4
+			self.num_inputs = 10
 			self.num_outputs = 256
 			self.bias = False
 
@@ -493,5 +493,6 @@ class Decoder(object):
 	class FC2Gen(object):
 		def __init__(self):
 			self.num_inputs =  256
-			self.num_outputs = 6272
+			# self.num_outputs = 6272
+			self.num_outputs = 8192
 			self.bias = False

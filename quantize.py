@@ -12,13 +12,13 @@ def prob_round(x, prec = 0):
     fixup = np.sign(x) * 10**prec
     x *= fixup
     is_up = np.random.random(x.shape) < (x-x.astype(int))
-    is_up_float = is_up.astype(int)
-    is_down_float = np.logical_not(is_up.astype(int))
-    round_up_half = np.ceil(is_up_float*x)
-    round_down_half = np.floor(is_down_float*x)
-    # round_func = math.ceil if is_up else math.floor
-    return (round_up_half + round_down_half)/fixup
-    # return round_func(x) / fixup
+    # is_up_float = is_up.astype(int)
+    # is_down_float = np.logical_not(is_up.astype(int))
+    # round_up_half = np.ceil(is_up_float*x)
+    # round_down_half = np.floor(is_down_float*x)
+    round_func = math.ceil if is_up else math.floor
+    # return (round_up_half + round_down_half)/fixup
+    return round_func(x) / fixup
 
 
 def compute_integral_part(input, overflow_rate):
@@ -40,9 +40,9 @@ def linear_quantize(input, sf, bits):
 	bound = math.pow(2.0, bits-1)
 	min_val = - bound
 	max_val = bound - 1
-	# rounded = torch.floor(input / delta + 0.5)
-	rounded = prob_round(input.cpu().numpy() / delta + 0.5)
-	rounded = torch.from_numpy(rounded).cuda()
+	rounded = torch.floor(input / delta + 0.5)
+	# rounded = prob_round(input.cpu().numpy() / delta + 0.5)
+	# rounded = torch.from_numpy(rounded).cuda()
 	clipped_value = torch.clamp(rounded, min_val, max_val) * delta
 	return clipped_value
 
@@ -78,6 +78,7 @@ def min_max_quantize(input, bits):
 		max_val = float(max_val.data.cpu().numpy()[0])
 		min_val = float(min_val.data.cpu().numpy()[0])
 
+	max_val += 1e-3
 	input_rescale = (input - min_val) / (max_val - min_val)
 
 	n = math.pow(2.0, bits) - 1
@@ -179,27 +180,70 @@ class NormalQuant(nn.Module):
 
 def duplicate_model_with_quant(model, bits, overflow_rate=0.0, counter=10, type='linear'):
 	"""assume that original model has at least a nn.Sequential"""
-	assert type in ['linear', 'minmax', 'log', 'tanh']
-	if isinstance(model, nn.Sequential):
-		l = OrderedDict()
-		for k, v in model._modules.items():
-			if isinstance(v, (nn.Conv2d, nn.Linear, nn.BatchNorm1d, nn.BatchNorm2d, nn.AvgPool2d)):
-				l[k] = v
+	# assert type in ['linear', 'minmax', 'log', 'tanh']
+	# if isinstance(model, nn.Conv2d) or isinstance(model, nn.Linear) or isinstance(model, nn.BatchNorm2d) \
+	# 		or isinstance(model, nn.BatchNorm1d) or isinstance(model, nn.ConvTranspose2d):
+	# 	l = OrderedDict()
+	# 	# for k, v in model._modules.items():
+	# 	print("IM INNNNNN")
+	# 	if isinstance(model, (nn.Conv2d, nn.Linear, nn.BatchNorm1d, nn.BatchNorm2d, nn.ConvTranspose2d, nn.AvgPool2d)):
+	# 		l[k] = model
+	# 		if type == 'linear':
+	# 			quant_layer = LinearQuant('{}_quant'.format(k), bits=bits, overflow_rate=overflow_rate, counter=counter)
+	# 		elif type == 'log':
+	# 			# quant_layer = LogQuant('{}_quant'.format(k), bits=bits, overflow_rate=overflow_rate, counter=counter)
+	# 			quant_layer = NormalQuant('{}_quant'.format(k), bits=bits, quant_func=log_minmax_quantize)
+	# 		elif type == 'minmax':
+	# 			quant_layer = NormalQuant('{}_quant'.format(k), bits=bits, quant_func=min_max_quantize)
+	# 		else:
+	# 			quant_layer = NormalQuant('{}_quant'.format(k), bits=bits, quant_func=tanh_quantize)
+	# 		l['{}_{}_quant'.format(k, type)] = quant_layer
+	# 	else:
+	# 		l[k] = duplicate_model_with_quant(model, bits, overflow_rate, counter, type)
+	# 	m = nn.Sequential(l)
+	# 	return m
+	# else:
+	# 	print("HOWDDDYYYYY")
+	# 	for k, v in model._modules.items():
+	# 		model._modules[k] = duplicate_model_with_quant(v, bits, overflow_rate, counter, type)
+	# 	return model
+
+	l = OrderedDict()
+	# print model._modules.items()
+	# exit(1)
+	# print model.state_dict()
+	for k, v in model._modules.items():
+		if isinstance(v, (nn.Conv2d, nn.Linear, nn.BatchNorm1d, nn.BatchNorm2d, nn.ConvTranspose2d, nn.ReLU, nn.Sigmoid)):
+			l[k] = v
+			print k
+			if type == 'linear':
+				quant_layer = LinearQuant('{}_quant'.format(k), bits=bits, overflow_rate=overflow_rate, counter=counter)
+			elif type == 'log':
+				# quant_layer = LogQuant('{}_quant'.format(k), bits=bits, overflow_rate=overflow_rate, counter=counter)
+				quant_layer = NormalQuant('{}_quant'.format(k), bits=bits, quant_func=log_minmax_quantize)
+			elif type == 'minmax':
+				quant_layer = NormalQuant('{}_quant'.format(k), bits=bits, quant_func=min_max_quantize)
+			else:
+				quant_layer = NormalQuant('{}_quant'.format(k), bits=bits, quant_func=tanh_quantize)
+			l['{}_{}_quant'.format(k, type)] = quant_layer
+		else:
+			for nextK, nextV in v._modules.items():
+				# print nextK
+				l[nextK] = nextV
 				if type == 'linear':
-					quant_layer = LinearQuant('{}_quant'.format(k), bits=bits, overflow_rate=overflow_rate, counter=counter)
+					quant_layer = LinearQuant('{}_quant'.format(nextK), bits=bits, overflow_rate=overflow_rate, counter=counter)
 				elif type == 'log':
 					# quant_layer = LogQuant('{}_quant'.format(k), bits=bits, overflow_rate=overflow_rate, counter=counter)
-					quant_layer = NormalQuant('{}_quant'.format(k), bits=bits, quant_func=log_minmax_quantize)
+					quant_layer = NormalQuant('{}_quant'.format(nextK), bits=bits, quant_func=log_minmax_quantize)
 				elif type == 'minmax':
-					quant_layer = NormalQuant('{}_quant'.format(k), bits=bits, quant_func=min_max_quantize)
+					quant_layer = NormalQuant('{}_quant'.format(nextK), bits=bits, quant_func=min_max_quantize)
 				else:
-					quant_layer = NormalQuant('{}_quant'.format(k), bits=bits, quant_func=tanh_quantize)
-				l['{}_{}_quant'.format(k, type)] = quant_layer
-			else:
-				l[k] = duplicate_model_with_quant(v, bits, overflow_rate, counter, type)
-		m = nn.Sequential(l)
-		return m
-	else:
-		for k, v in model._modules.items():
-			model._modules[k] = duplicate_model_with_quant(v, bits, overflow_rate, counter, type)
-		return model
+					quant_layer = NormalQuant('{}_quant'.format(nextK), bits=bits, quant_func=tanh_quantize)
+				l['{}_{}_{}_quant'.format(v, nextK, type)] = quant_layer
+
+	m = nn.Sequential(l)
+	return m
+
+
+	
+

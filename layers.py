@@ -32,7 +32,7 @@ class Conv2D_BN_ReLU(nn.Module):
 		super(Conv2D_BN_ReLU, self).__init__()
 		self.conv = nn.Conv2d(config.num_inputs, config.num_outputs, config.kernel_size, stride=config.stride, 
 							padding=config.padding, dilation=config.dilation, groups=config.groups) 
-		self.bn = nn.BatchNorm2d(config.num_outputs, affine=True)
+		self.bn = nn.BatchNorm2d(config.num_outputs,eps=1e-4, affine=True)
 		self.relu = nn.ReLU(inplace=False)
 
 
@@ -57,7 +57,7 @@ class Conv2DTrans_BN_ReLU(nn.Module):
 		self.conv_trans = nn.ConvTranspose2d(config.num_inputs, config.num_outputs, config.kernel_size, stride=config.stride, 
 							padding=config.padding, output_padding=config.output_padding, dilation=config.dilation,
 							groups=config.groups) 
-		self.bn = nn.BatchNorm2d(config.num_outputs, affine=True)
+		self.bn = nn.BatchNorm2d(config.num_outputs,eps=1e-4, affine=True)
 		self.relu = nn.ReLU(inplace=False)
 
 
@@ -80,7 +80,7 @@ class FC_BN_ReLU(nn.Module):
 	def __init__(self, config):
 		super(FC_BN_ReLU, self).__init__()
 		self.fc = nn.Linear(config.num_inputs, config.num_outputs, bias=False)
-		self.bn = nn.BatchNorm1d(num_features=config.num_outputs, affine=True)
+		self.bn = nn.BatchNorm1d(num_features=config.num_outputs, eps=1e-4,affine=True)
 		self.relu = nn.ReLU(inplace=False)
 
 
